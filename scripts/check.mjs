@@ -53,7 +53,12 @@ const bad = (m) => { console.error(`  FAIL ${m}`); failed++; };
 // ── The contract still says which routes cost money ─────────────────────
 {
   const doc = rd('docs/AGENT_API.md');
-  const claim = doc.match(/\*\*(\d+) of (\d+) routes can spend/);
+  // Matches the Money section's count line. It has been reworded once already
+  // -- "N of M routes can spend the account's Anthropic key" became "**The
+  // account's Anthropic key.** N of M routes spend it" when the section grew a
+  // second budget -- and this check went red rather than silently passing on a
+  // file it no longer understood, which is the entire point of it.
+  const claim = doc.match(/(\d+) of (\d+) routes spend it/);
   if (!claim) bad('docs/AGENT_API.md: no "N of M routes can spend" line -- is this really the generated file?');
   else if (Number(claim[1]) === 0) bad('docs/AGENT_API.md: says NO route costs money, which cannot be right');
   else if (Number(claim[1]) >= Number(claim[2]) / 4) bad(`docs/AGENT_API.md: ${claim[1]} of ${claim[2]} marked paid -- too many to be right`);

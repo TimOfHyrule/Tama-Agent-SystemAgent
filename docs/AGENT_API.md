@@ -22,13 +22,26 @@ account owns.
 
 ## Money
 
-**11 of 170 routes can spend the account's Anthropic key.**
-Everything else is database work and costs nothing.
+There are TWO budgets here, and only one of them is what `$` marks.
+
+**The account's Anthropic key.** 11 of 170 routes spend it. That is a bill
+to whoever owns this Tamarada install, for work Tamarada does on its own
+behalf — running a SOP step, drafting, summarising. This is the axis the
+rest of this file is about.
+
+**Your own plan's token allowance.** EVERY route spends this, because you are
+the one calling it: reading the response, deciding what to do next and writing
+the next request are all tokens off the Claude Code subscription driving this.
+
+So "free" in this file always means **"does not touch the account's Anthropic
+key"**, and never "costs nothing". A route without `$` is not an invitation to
+call it in a loop, and telling somebody a build is free is wrong — it is billed
+to a different budget, which is not the same thing.
 
 The mistake this file exists to prevent: reaching for a drafting route to
 "help" write a SOP. An agent can write the SOP itself and `PUT /api/sops/:name`
-for free — the drafting route spends money to produce what the agent was
-about to produce anyway.
+without spending the key — the drafting route bills the account to produce what
+the agent was about to produce anyway.
 
 | Route | Why it costs |
 |---|---|
@@ -46,7 +59,9 @@ about to produce anyway.
 
 ## Every route
 
-`$` marks a route from the table above. Everything else is free.
+`$` marks a route that spends the account's Anthropic key. Everything else is
+database work that bills nobody — though calling it still costs your own plan's
+tokens, as above.
 
 ### /api/accounts
 

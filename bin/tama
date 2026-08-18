@@ -142,7 +142,8 @@ const paid = paidRoutes().find((r) => r.method === method.toUpperCase() && match
 if (paid && !allowPaid) {
   console.error(
     'REFUSED: ' + method.toUpperCase() + ' ' + route + " spends the account's Anthropic key.\n"
-    + 'See docs/AGENT_API.md for why, and for the free route that usually does the same job.\n'
+    + 'See docs/AGENT_API.md for why, and for the route that usually does the same job\n'
+    + 'without touching the key.\n'
     + 'If this is genuinely wanted, ask the human first, then re-run with --paid.'
   );
   process.exit(3);

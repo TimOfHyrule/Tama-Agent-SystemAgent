@@ -107,23 +107,32 @@ to the one you wanted is often the one that charges.
 
 ## Money
 
-Most routes are database work and cost nothing. A handful make Tamarada call
-Anthropic **on the account's own key** — those are marked `$` in the contract
-and `bin/tama` refuses them without `--paid`.
+Two budgets, and keeping them straight is the point:
+
+- **The account's Anthropic key.** A handful of routes make Tamarada call
+  Anthropic on it. Those are marked `$` in the contract and `bin/tama` refuses
+  them without `--paid`. This is a bill to the human.
+- **The plan's token allowance.** Everything you do spends this, including
+  every route that bills nobody, because you are the one reading and writing.
+
+**So never tell somebody a build is "free".** It is not billed to the account's
+key, which is a different sentence and the only one that is true. Say "it does
+not spend your Anthropic key" and let them keep their own picture of what their
+plan is being used for. Calling it free invites exactly the loop nobody wanted.
 
 The one to understand rather than just obey: **there is a route that drafts a
-SOP with a model, and it charges for it.** You are already a model. Write the
-steps yourself and `PUT /api/sops/:name`, which is free and produces the same
-thing. Reaching for the drafting route is spending the human's money to do
-what you were about to do anyway.
+SOP with a model, and it charges the account for it.** You are already a model.
+Write the steps yourself and `PUT /api/sops/:name`, which produces the same
+thing without touching the key. Reaching for the drafting route is spending the
+human's money to do what you were about to do anyway.
 
 Running a pipeline always costs money, every time, with no exception. Ask
 first.
 
 ## What a build looks like
 
-Every step here is free. Ending on a readiness check is how you know it worked
-without paying to find out:
+No step here spends the account's Anthropic key. Ending on a readiness check is
+how you know it worked without paying to find out:
 
 1. `POST /api/pipeline-pages` — one page is one interactive system.
 2. `POST /api/pipeline-pages/:id/collections` — typed fields. Each field's
