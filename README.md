@@ -54,6 +54,13 @@ export TAMARADA_KEY=dos_something_you_chose
 In Claude Code on the web, set them in the environment's variables rather than
 exporting them in a shell — a shell export does not survive between sessions.
 
+Locally, a `.env` file in the repo root works too: the session-start hook reads
+it and carries both values into the session, so `bin/tama` and `bin/mem` work
+without exporting anything by hand. It is gitignored, and the hook copies across
+only those two names — nothing else in the file is exported. "Never in this
+repo" above means never in a *tracked* file; `.env` is the one place that is
+in the directory but never in a commit.
+
 **3. Check it:**
 
 ```bash
