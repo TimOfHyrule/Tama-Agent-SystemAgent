@@ -4,6 +4,9 @@ House style for this install. Obvious once, invisible afterwards.
 
 <!-- bin/memo appends below this line -->
 
+## 2026-08-18 · Tim 用中文交流 — 回复用中文。代码、API 路由、字段名和提交信息保持英文
+
+
 ## 2026-08-18 · CI: scripts/check.mjs runs on every push; the contract-drift check needs the TAMARADA_REPO_TOKEN secret
 
 
