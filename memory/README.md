@@ -5,6 +5,20 @@ starts with no memory of the last one, so anything learned the hard way is
 learned again — and on this platform "again" can mean another failed run, which
 is real money.
 
+## This is the technical half
+
+There is a second memory, for company knowledge, and it is **not in this repo**
+— it is a Tamarada collection, read and written with `bin/mem`. See
+`docs/COMPANY_MEMORY.md`.
+
+Which one a note belongs in is usually obvious, and the test when it is not:
+*would this still be worth having if Tamarada were down?* This half is exactly
+the notes that would be — how the API behaves, what failed and why — which is
+why they stay in files a broken Tamarada cannot take with it. The rule below
+governs only this half; the company side is governed by how long a thing stays
+true instead, because "cannot be looked up" admits almost everything about a
+company and so filters nothing.
+
 ## The one rule
 
 **Write down only what cannot be looked up.**

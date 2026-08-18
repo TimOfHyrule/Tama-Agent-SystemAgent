@@ -1,0 +1,211 @@
+#!/usr/bin/env node
+// Memory that lives in Tamarada rather than in this repo.
+//
+//   bin/mem setup                       create the page and collection, once
+//   bin/mem add fact "..."              write a note
+//   bin/mem add now "..." --for 14      a note that expires in 14 days
+//   bin/mem                             read it all back (start of a session)
+//   bin/mem forget <recordId>           remove one
+//
+// ── Why not files, when memory/ is files ─────────────────────────────────
+//
+// memory/ is about operating Tamarada, and it is fine in git: it is technical,
+// it is publishable, and it is exactly what you need on hand when Tamarada
+// itself is misbehaving. Storing THAT in Tamarada would be circular.
+//
+// Company knowledge is the opposite on every count. It must never be public,
+// which in git means it can never be separated from the tooling once
+// committed -- history is permanent. Here it is account data: private by
+// construction, and it never touches a commit.
+//
+// Two things fall out of that which files could not give:
+//
+//   A person can read and edit it. It is a collection, so it renders as a
+//   table in the product, and pruning is deleting a row rather than opening a
+//   markdown file in a terminal.
+//
+//   Deleting is recoverable. record_log outlives the record (a rule the
+//   platform holds generally), so a note removed in haste is still there.
+//
+// ── The one thing this is worse at ───────────────────────────────────────
+//
+// It needs Tamarada to be reachable. Files do not. That is the trade, and it
+// is why the technical memory stays in git: the day you most need to remember
+// how this API behaves is the day the API is not behaving.
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const CONF = path.join(ROOT, '.memory.json');   // gitignored; just an id cache
+const PAGE = 'Agent memory';
+const COLLECTION = 'agent_memory';
+
+const BASE = process.env.TAMARADA_URL;
+const KEY = process.env.TAMARADA_KEY;
+if (!BASE || !KEY) {
+  console.error('Set TAMARADA_URL and TAMARADA_KEY first (see README.md).');
+  process.exit(2);
+}
+
+async function api(method, route, body) {
+  let res;
+  try {
+    res = await fetch(new URL(route, BASE), {
+      method,
+      headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+  } catch (err) {
+    console.error(`Could not reach Tamarada at ${BASE} (${err.cause?.code ?? err.message}).`);
+    console.error('Memory lives there, so there is none until it is back. Say so rather than guessing.');
+    process.exit(4);
+  }
+  const text = await res.text();
+  let json; try { json = JSON.parse(text); } catch { json = text; }
+  if (!res.ok) {
+    console.error(`HTTP ${res.status}: ${json?.error ?? text}`);
+    process.exit(1);
+  }
+  return json;
+}
+
+// The page and collection ids, found by NAME rather than trusted from the
+// cache: the cache is a convenience, and a stale id after somebody renames or
+// rebuilds something would fail in a way that reads like "memory is empty".
+async function locate({ create = false } = {}) {
+  const pages = await api('GET', '/api/pipeline-pages');
+  let page = pages.find((p) => p.name === PAGE);
+  if (!page) {
+    if (!create) return null;
+    page = await api('POST', '/api/pipeline-pages', { name: PAGE });
+    console.log(`Created page "${PAGE}".`);
+  }
+  const cols = await api('GET', `/api/pipeline-pages/${page.id}/collections`);
+  let col = cols.find((c) => c.name === COLLECTION);
+  if (!col) {
+    if (!create) return null;
+    col = await api('POST', `/api/pipeline-pages/${page.id}/collections`, {
+      name: COLLECTION,
+      // Descriptions say what a field MEANS, per this platform's own
+      // convention -- they are the only lasting record of intent, and the
+      // person editing this table in the UI reads them.
+      fields: [
+        { name: 'kind', type: 'select', options: ['fact', 'now', 'decision'], required: true,
+          description: 'fact = rarely changes. now = in flight, and dies on its own. decision = what was chosen and why.' },
+        { name: 'note', type: 'text', required: true,
+          description: 'One thing, in a sentence. For a decision, the REASON is the half worth keeping.' },
+        { name: 'expires', type: 'text',
+          description: 'For a `now` note: the date after which nobody should trust it without checking. Blank means it does not expire.' },
+      ],
+    });
+    console.log(`Created collection "${COLLECTION}".`);
+  }
+  fs.writeFileSync(CONF, JSON.stringify({ pageId: page.id, collectionId: col.id }, null, 2));
+  return { pageId: page.id, collectionId: col.id };
+}
+
+const [cmd, ...rest] = process.argv.slice(2);
+
+if (cmd === 'setup') {
+  const at = await locate({ create: true });
+  console.log(`Ready. ${BASE} -> Build -> ${PAGE} -> Data -> ${COLLECTION}`);
+  console.log(`collection ${at.collectionId}`);
+  process.exit(0);
+}
+
+const at = await locate();
+if (!at) {
+  console.error(`No "${COLLECTION}" collection yet. Run: bin/mem setup`);
+  process.exit(1);
+}
+
+if (cmd === 'add') {
+  const kind = rest[0];
+  if (!['fact', 'now', 'decision'].includes(kind)) {
+    console.error('usage: bin/mem add <fact|now|decision> "<note>" [--for <days>]');
+    process.exit(2);
+  }
+  const forIdx = rest.indexOf('--for');
+  const note = rest.slice(1, forIdx === -1 ? undefined : forIdx).join(' ').trim();
+  if (!note) { console.error('Nothing to write.'); process.exit(2); }
+  // Checked rather than coerced. `--for tomorrow` is Number -> NaN -> falsy,
+  // which USED to fall through and write a note with no expiry at all: you
+  // asked for something that dies on its own and silently got something
+  // permanent. Wrong in the one direction that never announces itself.
+  let days = null;
+  if (forIdx !== -1) {
+    days = Number(rest[forIdx + 1]);
+    if (!Number.isInteger(days) || days < 1) {
+      console.error(`--for wants a number of days ahead, got "${rest[forIdx + 1] ?? ''}".`);
+      process.exit(2);
+    }
+    // An expiry is only offered on `now`, because it is the only kind where
+    // "is this still true?" is the question. A fact that expires is not a fact.
+    if (kind !== 'now') { console.error('--for only applies to `now` notes.'); process.exit(2); }
+  }
+  const expires = days ? new Date(Date.now() + days * 86400000).toISOString().slice(0, 10) : '';
+  await api('POST', `/api/collections/${at.collectionId}/records`, { data: { kind, note, expires } });
+  console.log(`Remembered (${kind}${expires ? `, until ${expires}` : ''}).`);
+  process.exit(0);
+}
+
+if (cmd === 'forget') {
+  const id = rest[0];
+  if (!id) { console.error('usage: bin/mem forget <recordId>'); process.exit(2); }
+  const { records } = await api('GET', `/api/collections/${at.collectionId}/records`);
+  const rec = records.find((r) => r.id === id);
+  if (!rec) { console.error('No such note.'); process.exit(1); }
+  // The version goes in the QUERY STRING, not the body -- the route reads
+  // req.query.expectedVersion, and a body it never looks at would arrive as
+  // "expectedVersion is required" on a call that plainly supplied it.
+  await api('DELETE', `/api/records/${id}?expectedVersion=${rec.version}`);
+  // Precise on purpose. The record_log row survives the delete, so the text is
+  // never actually lost -- but restoreRecord() UPDATES a record and the row is
+  // gone, so getting it back means reading the log and adding it again. Saying
+  // "recoverable" without saying how is a promise somebody discovers is
+  // harder than it sounded at the worst possible moment.
+  console.log('Forgotten.');
+  console.log(`Still readable if that was a mistake: ${BASE}/api/collections/${at.collectionId}/records/log?recordId=${id}`);
+  console.log('(That is the log, not an undo -- getting it back means adding it again.)');
+  process.exit(0);
+}
+
+// Default: read it all back.
+const { records } = await api('GET', `/api/collections/${at.collectionId}/records`);
+if (!records.length) {
+  console.log('No memory yet. Write some with: bin/mem add fact "..."');
+  process.exit(0);
+}
+const today = new Date().toISOString().slice(0, 10);
+const dayOf = (iso) => (iso || '').slice(0, 10);
+const daysSince = (iso) => Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+
+// How old a `now` note has to get before it is called out. Not an expiry --
+// nothing is hidden or deleted -- just the point past which "is this still
+// true?" is a fair question to ask about something whose whole category is
+// "in flight".
+const STALE_DAYS = 30;
+
+for (const kind of ['fact', 'now', 'decision']) {
+  const mine = records.filter((r) => r.data?.kind === kind);
+  if (!mine.length) continue;
+  console.log(`\n${kind.toUpperCase()}`);
+  for (const r of mine) {
+    // An expired `now` is SHOWN, not hidden -- silently dropping it would look
+    // like it was never written. Marked, so it is not mistaken for current.
+    const expired = r.data.expires && r.data.expires < today;
+    // The file version of this memory had a rule that every `now` entry must
+    // carry a date, and a CI check enforcing it, because an undated "waiting
+    // on the supplier" is true the day it is written and indistinguishable
+    // from true a year later. Here the platform stamps createdAt on every
+    // record, so the rule costs nothing, cannot be forgotten, and -- unlike a
+    // date typed into the text -- cannot be wrong. The check that used to
+    // enforce it is deleted rather than ported.
+    const old = kind === 'now' && !r.data.expires && daysSince(r.createdAt) >= STALE_DAYS;
+    const flag = expired ? '[EXPIRED] ' : old ? '[OLD] ' : '';
+    console.log(`  ${flag}${r.data.note}`);
+    const when = r.data.expires ? `until ${r.data.expires}` : `written ${dayOf(r.createdAt)}`;
+    console.log(`      ${r.id}  ·  ${when}`);
+  }
+}

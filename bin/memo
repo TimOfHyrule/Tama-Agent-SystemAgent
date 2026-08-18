@@ -4,6 +4,9 @@
 //   bin/memo dead-ends "Trigger conditions cannot see collection data"
 //   bin/memo decisions "Weekly report goes to a Report page, not a collection"
 //
+// This is the TECHNICAL memory, in files. Company knowledge is `bin/mem`, and
+// lives in Tamarada -- see docs/COMPANY_MEMORY.md.
+//
 // ── Why a command and not "just edit the file" ───────────────────────────
 //
 // Writing things down loses to finishing the task, every time, unless it costs
@@ -20,31 +23,20 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-// Two memories, deliberately kept apart -- memory/ is about operating
-// Tamarada, company/ is about running the company, and the rule governing what
-// belongs is different in each (see their READMEs). One command writes to
-// both, because a second command to remember is a command nobody uses.
-const DIRS = ['memory', 'company'];
+// memory/ only. This used to scan company/ as well, back when company
+// knowledge was markdown in this repo; it is a Tamarada collection now, and
+// `bin/mem` writes it (docs/COMPANY_MEMORY.md says why it moved). The split
+// that remains is the durable one: memory/ is how to OPERATE Tamarada, which
+// is technical, publishable, and the thing you need on hand precisely when
+// Tamarada is not answering -- so it stays in files.
+const DIR = 'memory';
 const MARKER = '<!-- bin/memo appends below this line -->';
 
 const topics = new Map(); // topic -> absolute file
-for (const d of DIRS) {
-  const dir = path.join(ROOT, d);
-  if (!fs.existsSync(dir)) continue;
-  for (const f of fs.readdirSync(dir)) {
-    if (!f.endsWith('.md') || f === 'README.md') continue;
-    const name = f.replace(/\.md$/, '');
-    // A name in both directories would silently write to whichever was
-    // scanned first. Qualify it rather than guess.
-    if (topics.has(name)) {
-      topics.set(`${d}/${name}`, path.join(dir, f));
-      const [firstDir] = topics.get(name).split(path.sep).slice(-2);
-      topics.set(`${firstDir}/${name}`, topics.get(name));
-      topics.delete(name);
-    } else {
-      topics.set(name, path.join(dir, f));
-    }
-  }
+const dir = path.join(ROOT, DIR);
+for (const f of fs.existsSync(dir) ? fs.readdirSync(dir) : []) {
+  if (!f.endsWith('.md') || f === 'README.md') continue;
+  topics.set(f.replace(/\.md$/, ''), path.join(dir, f));
 }
 
 const [topic, ...rest] = process.argv.slice(2);
@@ -74,8 +66,8 @@ if (!src.includes(MARKER)) {
 // and it does not -- these are notes, not a log.
 const day = new Date().toISOString().slice(0, 10);
 // A date typed into the text as well would render as "2026-08-18 · 2026-08-18
-// · ...". People do this because company/now.md's own rule is that entries are
-// dated, so writing one feels required.
+// · ...". People do this because dated entries are the convention everywhere
+// else in both memories, so typing one feels required.
 const body = text.replace(/^\d{4}-\d{2}-\d{2}\s*[·:-]?\s*/, '');
 // Newest first: what was learned last week is likelier to matter than what was
 // learned in March, and a file read top-down should hit it first.

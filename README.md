@@ -87,25 +87,40 @@ Code locally instead, or expose the install at a URL.
 `bin/tama` says exactly this when a request cannot connect, so you will not
 have to remember it.
 
-## company/ and memory/
+## Two memories, in two different places
 
-Two memories that survive between sessions, kept apart because what belongs in
-each is decided differently.
+Both survive between sessions. They are kept apart because what belongs in each
+is decided differently — and, more importantly, because one of them must never
+be public.
 
-**`company/`** — running the company. Split by how long a thing stays true:
-`facts.md` rarely changes, `now.md` is in flight and every entry is dated,
-`decisions.md` is why-we-chose-that and is never read whole. The first two have
-a 200-line budget enforced by `scripts/check.mjs`, because past a certain size
-an agent reads *part* of a file and answers confidently from half the picture —
-and here there is no API to check against.
+**Company knowledge lives in Tamarada**, in a collection, reached with
+`bin/mem`:
 
-`company/README.md` also lists what must never go in: credentials, personal
-data about identifiable people, anything under someone else's confidentiality,
-and the full text of documents that have a canonical home. Git history is
-permanent, every clone copies it, and all of it enters a model's context each
-session — so the rule is write the pointer, not the content.
+```bash
+bin/mem                                    # read it all -- the first thing a session does
+bin/mem add fact     "..."                 # rarely changes
+bin/mem add now      "..." [--for <days>]  # in flight; --for gives it an end date
+bin/mem add decision "..."                 # what was chosen, and why
+bin/mem forget <recordId>
+bin/mem setup                              # once, to create the page and collection
+```
 
-## memory/
+It is account data: private by construction, never in a commit, and editable by
+a person as a table in the product. It started as `company/*.md` in this repo
+and moved for one reason no amount of care in the files could fix — **git
+history is permanent**, so a private note committed once is in every clone
+forever, and taking it back is not possible. `docs/COMPANY_MEMORY.md` has the
+full rule, including what must never go in at all.
+
+The trade is real and worth stating: `bin/mem` needs Tamarada reachable, and
+files did not. That is exactly why the other half stayed in files.
+
+## memory/ — operating knowledge, in files
+
+**Operating knowledge stays in this repo**, in `memory/`, written with
+`bin/memo <topic> "..."`. It is technical, it is publishable, and it is what
+you need on hand *precisely when Tamarada is misbehaving* — which is the one
+moment a Tamarada-backed memory is no help at all.
 
 Notes that outlive a session, so the next one does not relearn what the last
 one did. `memory/README.md` states the discipline; the short version is that it
@@ -161,8 +176,14 @@ Tamarada, which no push here would notice.
 works on them: `bin/tama` parses `docs/AGENT_API.md` to know what to refuse,
 `bin/memo` finds a marker to append at, and either can stop matching without
 anything throwing — the guard just refuses nothing, the memo just writes
-nowhere. It also refuses to let a real key be committed, while ignoring the
+nowhere. It also holds `docs/COMPANY_MEMORY.md` to the kinds `bin/mem` really
+accepts, catches anything still pointing at the `company/*.md` files that moved
+into Tamarada, and refuses to let a real key be committed while ignoring the
 placeholders in this file.
+
+`bin/mem` is checked more thinly on purpose: what it talks to is Tamarada, so
+most of what could go wrong there needs a credential and a network, which this
+script deliberately has neither of.
 
 The contract check needs to reach Project-Station, which is private. Add a
 repository secret named **`TAMARADA_REPO_TOKEN`** and the weekly run will tell

@@ -14,6 +14,11 @@
 // they do not own. If either stops matching, nothing throws -- the guard
 // simply refuses nothing, and the memo simply writes nowhere. Those are the
 // failures worth a check, because they are the ones that look like success.
+//
+// bin/mem is checked more thinly on purpose: what it talks to is Tamarada, not
+// a file in here, so most of what could go wrong needs a credential and a
+// network. What IS checkable is the same shape as the above -- whether its
+// documentation still describes the tool.
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -62,12 +67,9 @@ const bad = (m) => { console.error(`  FAIL ${m}`); failed++; };
     bad('bin/memo: could not find its append marker constant');
   } else {
     const topics = [];
-    for (const d of ['memory', 'company']) {
-      const dir = path.join(ROOT, d);
-      if (!fs.existsSync(dir)) continue;
-      for (const f of fs.readdirSync(dir)) {
-        if (f.endsWith('.md') && f !== 'README.md') topics.push(`${d}/${f}`);
-      }
+    const dir = path.join(ROOT, 'memory');
+    for (const f of fs.existsSync(dir) ? fs.readdirSync(dir) : []) {
+      if (f.endsWith('.md') && f !== 'README.md') topics.push(`memory/${f}`);
     }
     const missing = topics.filter((f) => !rd(f).includes(marker));
     if (missing.length) bad(`bin/memo: no append marker in ${missing.join(', ')} -- notes there would fail to write`);
@@ -75,41 +77,50 @@ const bad = (m) => { console.error(`  FAIL ${m}`); failed++; };
   }
 }
 
-// ── The always-read files still fit in a session ────────────────────────
+// ── Nothing still points at the company files that moved ───────────
 //
-// company/facts.md and company/now.md are read IN FULL at the start of every
-// session. Past a certain size that stops happening: an agent reads part of a
-// file and answers from half the picture, confidently, with nothing to check
-// against -- and unlike the Tamarada side there is no API here to fall back
-// on. So the budget is a check rather than advice in a README nobody rereads.
+// company/facts.md, now.md and decisions.md are a Tamarada collection now
+// (docs/COMPANY_MEMORY.md says why). Two checks used to live here ── a 200-line
+// budget on the always-read ones and a rule that every now.md entry carried a
+// date ── and both are deleted rather than ported, because the platform stamps
+// createdAt itself and bin/mem prunes per note.
 //
-// decisions.md is deliberately exempt: nothing reads it whole.
+// What replaces them is the failure the move can actually cause: a doc, a
+// workflow or a script still sending somebody to a file that is not there. An
+// instruction pointing at a deleted path does not error, it just gets followed
+// into nothing.
 {
-  const BUDGET = 200;
-  const alwaysRead = ['company/facts.md', 'company/now.md'].filter((f) => fs.existsSync(path.join(ROOT, f)));
-  if (alwaysRead.length) {
-    const lines = alwaysRead.reduce((n, f) => n + rd(f).split('\n').length, 0);
-    if (lines > BUDGET) {
-      bad(`company/facts.md + company/now.md are ${lines} lines (budget ${BUDGET}). Prune them -- a memory too long to read is worse than a short one, because it gets read in part.`);
-    } else {
-      ok(`always-read company memory is ${lines}/${BUDGET} lines`);
-    }
-  }
+  const tracked = fs.readdirSync(ROOT, { recursive: true })
+    .filter((f) => typeof f === 'string' && !f.startsWith('.git/') && !f.startsWith('node_modules'))
+    .filter((f) => fs.statSync(path.join(ROOT, f)).isFile());
+  const stale = tracked.filter((f) => {
+    if (f === 'scripts/check.mjs') return false; // this check names the paths
+    // Prose ABOUT the move is fine and is the point of that document; a path
+    // being read or written is not. Matching the .md filename is what
+    // separates them.
+    return /company\/(facts|now|decisions)\.md/.test(rd(f));
+  });
+  if (stale.length) bad(`points at a company file that moved into Tamarada: ${stale.join(', ')} ── see docs/COMPANY_MEMORY.md`);
+  else ok('nothing points at the company files that moved');
 }
 
-// ── now.md entries are dated ────────────────────────────────────────────
+// ── bin/mem and its documentation agree on the kinds ────────────────
 //
-// An undated "waiting on the supplier" is true the day it is written and
-// indistinguishable from true a year later. Dating is the only thing that lets
-// a later session tell a live item from a fossil.
+// The same class of failure as bin/tama above: a doc text-matching a tool it
+// does not own. docs/COMPANY_MEMORY.md tells the reader which kinds exist, and
+// bin/mem rejects anything else ── so a kind added to one and not the other is
+// either a documented command that errors, or a working one nobody knows about.
 {
-  const f = 'company/now.md';
-  if (fs.existsSync(path.join(ROOT, f))) {
-    const undated = rd(f).split('\n')
-      .filter((l) => l.startsWith('## '))
-      .filter((l) => !/^## \d{4}-\d{2}-\d{2}/.test(l));
-    if (undated.length) bad(`${f}: ${undated.length} entr(ies) with no date -- a later session cannot tell those from fossils`);
-    else ok('every now.md entry is dated');
+  const mem = rd('bin/mem');
+  const m = mem.match(/if \(!\[([^\]]+)\]\.includes\(kind\)\)/);
+  if (!m) {
+    bad('bin/mem: could not find the list of kinds it accepts');
+  } else {
+    const kinds = [...m[1].matchAll(/'([a-z]+)'/g)].map((x) => x[1]);
+    const doc = rd('docs/COMPANY_MEMORY.md');
+    const undocumented = kinds.filter((k) => !doc.includes(`\`${k}\``));
+    if (undocumented.length) bad(`bin/mem accepts ${undocumented.join(', ')}, which docs/COMPANY_MEMORY.md never mentions`);
+    else ok(`bin/mem's ${kinds.length} kinds are all documented`);
   }
 }
 

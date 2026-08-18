@@ -21,27 +21,40 @@ for a key in the repo, and never write one into a file here.
 
 ## Two memories, read both
 
-`git pull` first, then read:
+They are in different places, and that is deliberate rather than accidental.
 
-- **`company/`** — running the company. `facts.md` (rarely changes) and
-  `now.md` (in flight, every entry dated) are read IN FULL every session;
-  `decisions.md` is grepped when a question comes up, not read whole.
-- **`memory/`** — operating Tamarada. See below.
+**Company knowledge — in Tamarada.** Run `bin/mem` before anything else. It
+prints the facts, what is in flight, and past decisions with their reasons. It
+is a collection, so the human can read and edit the same thing as a table in
+the product. Write to it with `bin/mem add <fact|now|decision> "..."` — no
+commit needed, it is saved the moment the command returns. Read
+`docs/COMPANY_MEMORY.md` before writing, including the list of what must never
+go in at all.
 
-They are separate because the rule for what belongs differs. `memory/` holds
-only what Tamarada cannot be asked, because it CAN be asked. Almost nothing
-about a company can be looked up anywhere, so `company/` is governed by how
-long a thing stays true instead — read `company/README.md` before writing
-there, including the list of what must never go in at all.
+**Operating knowledge — in this repo, `memory/`.** `git pull` first. See the
+next section.
+
+The split is not tidiness. Company knowledge must never become public, and in
+git that is a one-way door: deleting a file later leaves it in the history, in
+every clone, forever. Operating knowledge is the opposite — technical,
+publishable, and the thing you need on hand *precisely when Tamarada is not
+answering*, which is exactly when a Tamarada-backed memory would be no help.
+
+The rule for what belongs also differs. `memory/` holds only what Tamarada
+cannot be asked, because it CAN be asked. Almost nothing about a company can be
+looked up anywhere, so the company side is governed by how long a thing stays
+true instead.
 
 **Never put in either:** credentials, personal data about identifiable people,
 anything under someone else's confidentiality, or the full text of a document
-that has a canonical home elsewhere. Git history is permanent, every clone
-copies it, and all of it enters a model's context each session. Write the
-pointer, not the content.
+that has a canonical home elsewhere. All of it enters a model's context each
+session; the `memory/` half is additionally permanent in git history and copied
+by every clone. Write the pointer, not the content.
 
-If `now.md` has an entry whose date is old and you cannot confirm it still
-holds, say so and ask — do not carry it forward as fact.
+If `bin/mem` marks a note `[OLD]` or `[EXPIRED]` and you cannot confirm it still
+holds, say so and ask — do not carry it forward as fact. If Tamarada is
+unreachable, say that you have no company memory this session rather than
+answering from guesses.
 
 ## Start by reading memory/
 
