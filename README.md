@@ -105,6 +105,19 @@ bin/mem forget <recordId>
 bin/mem setup                              # once, to create the page and collection
 ```
 
+**Every session starts by going through it with you.** A SessionStart hook
+(`.claude/hooks/session-start.sh`) reads the memory before the agent's first
+message, so its opening move is to show you what it thinks it knows — and to
+ask about anything that has gone `[OLD]` or `[EXPIRED]`, so a wrong note gets
+corrected instead of quietly outliving its truth.
+
+It only *asks* about the stale ones. The version that asks about everything
+works twice; by the third session it is a wall of text between you and the
+thing you opened the session to do, and skipping it becomes the habit. If
+Tamarada is unreachable or the credentials are missing, the hook says so in
+the session rather than failing it — a hook that aborts the session it exists
+to help would be a worse bug than the one it fixes.
+
 It is account data: private by construction, never in a commit, and editable by
 a person as a table in the product. It started as `company/*.md` in this repo
 and moved for one reason no amount of care in the files could fix — **git

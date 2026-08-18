@@ -23,11 +23,18 @@ for a key in the repo, and never write one into a file here.
 
 They are in different places, and that is deliberate rather than accidental.
 
-**Company knowledge — in Tamarada.** Run `bin/mem` before anything else. It
-prints the facts, what is in flight, and past decisions with their reasons. It
-is a collection, so the human can read and edit the same thing as a table in
-the product. Write to it with `bin/mem add <fact|now|decision> "..."` — no
-commit needed, it is saved the moment the command returns. Read
+**Company knowledge — in Tamarada.** You do not have to fetch it: a SessionStart
+hook runs `bin/mem` and hands you the notes before your first message, together
+with instructions for going through them with the human. Do that first, every
+session — it is the point of the hook, and skipping it is how a wrong note
+survives for months.
+
+If no `COMPANY MEMORY:` block reached you, the hook did not run. Say so and run
+`bin/mem` yourself rather than proceeding as though there is nothing to know.
+
+Write to it with `bin/mem add <fact|now|decision> "..."` — no commit needed, it
+is saved the moment the command returns. It is a collection, so the human can
+read and edit the same thing as a table in the product. Read
 `docs/COMPANY_MEMORY.md` before writing, including the list of what must never
 go in at all.
 
@@ -51,10 +58,15 @@ that has a canonical home elsewhere. All of it enters a model's context each
 session; the `memory/` half is additionally permanent in git history and copied
 by every clone. Write the pointer, not the content.
 
-If `bin/mem` marks a note `[OLD]` or `[EXPIRED]` and you cannot confirm it still
-holds, say so and ask — do not carry it forward as fact. If Tamarada is
-unreachable, say that you have no company memory this session rather than
-answering from guesses.
+A note marked `[OLD]` or `[EXPIRED]` is one to ask about, not one to carry
+forward as fact — and when you get an answer, **act on it** with `bin/mem add`
+or `bin/mem forget`. A review that changes nothing is a review that trains
+somebody to skip the next one.
+
+Ask about nothing else. Every other note is current, and questioning what is
+already right is exactly how the whole step becomes noise. If Tamarada was
+unreachable, say you have no company memory this session rather than answering
+from guesses.
 
 ## Start by reading memory/
 

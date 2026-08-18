@@ -124,6 +124,50 @@ const bad = (m) => { console.error(`  FAIL ${m}`); failed++; };
   }
 }
 
+// ── The session-start hook is still wired up ────────────────────────
+//
+// The same shape as everything else here: .claude/settings.json names a script
+// by PATH, and nothing anywhere resolves that name until a session starts. Move
+// or rename the file and no error appears -- the hook simply does not run, and
+// every session quietly begins with no company memory while looking completely
+// normal. That is the one failure mode this repo keeps rediscovering, so it
+// gets a check rather than a convention.
+{
+  let settings;
+  try { settings = JSON.parse(rd('.claude/settings.json')); }
+  catch (e) { settings = null; bad(`.claude/settings.json: ${e.message}`); }
+  if (settings) {
+    const cmds = (settings.hooks?.SessionStart ?? []).flatMap((g) => g.hooks ?? []).map((h) => h.command ?? '');
+    if (!cmds.length) {
+      bad('.claude/settings.json: no SessionStart hook -- sessions would start with no company memory');
+    } else {
+      // $CLAUDE_PROJECT_DIR is the repo root at run time, so stripping it
+      // gives a path this script can actually check for.
+      const missing = cmds
+        .map((c) => c.replace(/^\$(\{)?CLAUDE_PROJECT_DIR(\})?\//, ''))
+        .filter((c) => !fs.existsSync(path.join(ROOT, c)));
+      if (missing.length) bad(`SessionStart hook points at ${missing.join(', ')}, which does not exist`);
+      else ok(`SessionStart hook resolves to ${cmds.length} script(s) that exist`);
+    }
+  }
+
+  // And the hook is only useful if the OS will run it.
+  const hook = '.claude/hooks/session-start.sh';
+  if (fs.existsSync(path.join(ROOT, hook))) {
+    if (!(fs.statSync(path.join(ROOT, hook)).mode & 0o111)) {
+      bad(`${hook} is not executable -- git tracks the bit, and without it the hook silently does not run`);
+    } else ok('the hook is executable');
+  }
+
+  // The hook hands the session a block the agent is told to look for by name.
+  // If one side is reworded, the instruction in CLAUDE.md sends somebody
+  // hunting for a string that is never emitted.
+  const marker = 'COMPANY MEMORY';
+  if (!rd('scripts/sessionMemory.mjs').includes(marker)) bad(`scripts/sessionMemory.mjs no longer emits "${marker}"`);
+  else if (!rd('CLAUDE.md').includes(marker)) bad(`CLAUDE.md no longer mentions "${marker}", which the hook emits`);
+  else ok(`hook and CLAUDE.md agree on the "${marker}" marker`);
+}
+
 // ── Nothing secret got committed ────────────────────────────────────────
 {
   // .env is gitignored, but a key pasted into any tracked file is not, and it
