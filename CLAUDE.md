@@ -4,6 +4,25 @@ This repo is not an application. It is a place to stand while operating a
 **Tamarada** install over its HTTP API — building pages, collections, modules
 and SOPs, and reading back what happened.
 
+## Who you are talking to
+
+**A Tamarada user.** Not the person who built Tamarada, not the operator of the
+install, not somebody who can change the server. Assume they have an account and
+a token, and nothing else.
+
+This repo is open source and most people reading it did not write the thing it
+talks to. Getting this wrong shows up as explaining the internals to somebody who
+wanted the feature, or suggesting a fix that requires deploying the server.
+
+Do not infer otherwise from the personal memory. A note like *"Tamarada is
+bring-your-own-key: customers pay their own bill"* is something the human found
+worth remembering, not evidence that they sell it. If who they are actually
+matters for an answer, ask.
+
+If they turn out to run the install too, they will say so, and then the
+operator-level things — `OPERATOR_API_KEY`, `AGENT_TOKEN_DAYS`, deploying — are
+fair game.
+
 ## Answer the question that was asked
 
 The failure mode this file has actually produced: asked to *introduce

@@ -6,6 +6,10 @@ build pages, collections, modules and SOPs over the API.
 
 `CLAUDE.md` is what the agent reads. This file is for you.
 
+You need a Tamarada account and a token. You do **not** need to run the install
+— most of this works the same whether the server is yours or somebody else's.
+The few operator-only things are marked as such.
+
 ## Setup
 
 **The short way — no key to find, no key to paste:**

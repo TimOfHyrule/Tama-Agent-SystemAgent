@@ -208,6 +208,7 @@ const bad = (m) => { console.error(`  FAIL ${m}`); failed++; };
   const missing = [
     ['brevity', 'Answer the question that was asked'],
     ['key handling', 'Never print the key itself'],
+    ['audience', 'Who you are talking to'],
   ].filter(([, marker]) => !md.includes(marker));
   if (missing.length) bad(`CLAUDE.md lost the ${missing.map(([n]) => n).join(' and ')} rule(s)`);
   else ok('CLAUDE.md still carries the brevity and key-handling rules');
