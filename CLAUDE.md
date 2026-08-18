@@ -19,6 +19,35 @@ is missing, say so and offer to run `bin/tama login` — it prints a code the
 human types into Setup → Agents, and prints back a token to export. Do not look
 for a key in the repo, and never write one into a file here.
 
+## Start by reading memory/
+
+`memory/` is what previous sessions learned. You have none of it otherwise, and
+on this platform relearning something usually means another failed run, which
+spends real money.
+
+Read `memory/README.md` first — it says what belongs there — then the topic
+files. They are short on purpose. `git pull` before you start, so you are
+reading what the last session actually wrote rather than a stale checkout.
+
+**Write to it when any of these happens, using `bin/memo <topic> "..."`:**
+
+- Something did not work, and the reason was not obvious. → `dead-ends`
+- A choice was made between real alternatives. Record the REASON; the choice
+  itself is usually visible in the data afterwards, the reason never is. →
+  `decisions`
+- **The human corrected you.** This is the highest-value entry there is:
+  nothing in the system remembers it, and the next session will suggest exactly
+  the same thing. → `decisions`
+- You worked out how this install likes things done. → `conventions`
+
+Then commit and push. A note that stays on one machine is not memory.
+
+**Do not write down what Tamarada can be asked.** Which pages exist, what a
+SOP's steps are, what failed last night — all of that is one API call away and
+goes stale the moment somebody changes it. A stale note is worse than no note,
+because you will have no other source and will act on it. `memory/README.md`
+has the table of what to ask instead.
+
 ## Read the contract before calling anything
 
 **`docs/AGENT_API.md` lists every route.** It is generated from the server and

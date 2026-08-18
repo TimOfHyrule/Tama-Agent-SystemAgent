@@ -1,0 +1,58 @@
+#!/usr/bin/env node
+// Append one dated note to the shared memory.
+//
+//   bin/memo dead-ends "Trigger conditions cannot see collection data"
+//   bin/memo decisions "Weekly report goes to a Report page, not a collection"
+//
+// ── Why a command and not "just edit the file" ───────────────────────────
+//
+// Writing things down loses to finishing the task, every time, unless it costs
+// almost nothing. One command that stamps the date and puts the entry in the
+// right place is about as close to nothing as it gets. The formatting is not
+// the point -- the point is removing the moment where an agent decides it is
+// not worth opening a file.
+//
+// It also refuses topics it does not know. A typo would otherwise create
+// `memory/dead-end.md` next to `memory/dead-ends.md`, and the next session
+// greps one of them and finds half the story.
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'memory');
+const MARKER = '<!-- bin/memo appends below this line -->';
+
+const topics = fs.existsSync(DIR)
+  ? fs.readdirSync(DIR).filter((f) => f.endsWith('.md') && f !== 'README.md').map((f) => f.replace(/\.md$/, ''))
+  : [];
+
+const [topic, ...rest] = process.argv.slice(2);
+const text = rest.join(' ').trim();
+
+if (!topic || !text) {
+  console.error('usage: bin/memo <topic> "<what happened>"');
+  console.error(`topics: ${topics.join(', ') || '(none yet)'}`);
+  process.exit(2);
+}
+if (!topics.includes(topic)) {
+  console.error(`No memory/${topic}.md. Topics: ${topics.join(', ')}`);
+  console.error('Add a genuinely new topic by creating the file with the same header + marker.');
+  process.exit(2);
+}
+
+const file = path.join(DIR, `${topic}.md`);
+const src = fs.readFileSync(file, 'utf8');
+if (!src.includes(MARKER)) {
+  console.error(`memory/${topic}.md has lost its append marker; add it back or edit by hand.`);
+  process.exit(1);
+}
+
+// Date only. A time would suggest the ordering within a day carries meaning,
+// and it does not -- these are notes, not a log.
+const day = new Date().toISOString().slice(0, 10);
+// Newest first: what was learned last week is likelier to matter than what was
+// learned in March, and a file read top-down should hit it first.
+const entry = `\n## ${day} · ${text}\n`;
+fs.writeFileSync(file, src.replace(MARKER, MARKER + '\n' + entry.trimEnd() + '\n'));
+console.log(`memory/${topic}.md  +  ${day} · ${text}`);
+console.log('Commit and push it, or the next session on another machine never sees it.');
