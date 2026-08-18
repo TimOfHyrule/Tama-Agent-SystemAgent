@@ -61,11 +61,55 @@ const bad = (m) => { console.error(`  FAIL ${m}`); failed++; };
   if (!marker) {
     bad('bin/memo: could not find its append marker constant');
   } else {
-    const topics = fs.readdirSync(path.join(ROOT, 'memory'))
-      .filter((f) => f.endsWith('.md') && f !== 'README.md');
-    const missing = topics.filter((f) => !rd(`memory/${f}`).includes(marker));
+    const topics = [];
+    for (const d of ['memory', 'company']) {
+      const dir = path.join(ROOT, d);
+      if (!fs.existsSync(dir)) continue;
+      for (const f of fs.readdirSync(dir)) {
+        if (f.endsWith('.md') && f !== 'README.md') topics.push(`${d}/${f}`);
+      }
+    }
+    const missing = topics.filter((f) => !rd(f).includes(marker));
     if (missing.length) bad(`bin/memo: no append marker in ${missing.join(', ')} -- notes there would fail to write`);
     else ok(`bin/memo can append to ${topics.length} topic(s)`);
+  }
+}
+
+// ── The always-read files still fit in a session ────────────────────────
+//
+// company/facts.md and company/now.md are read IN FULL at the start of every
+// session. Past a certain size that stops happening: an agent reads part of a
+// file and answers from half the picture, confidently, with nothing to check
+// against -- and unlike the Tamarada side there is no API here to fall back
+// on. So the budget is a check rather than advice in a README nobody rereads.
+//
+// decisions.md is deliberately exempt: nothing reads it whole.
+{
+  const BUDGET = 200;
+  const alwaysRead = ['company/facts.md', 'company/now.md'].filter((f) => fs.existsSync(path.join(ROOT, f)));
+  if (alwaysRead.length) {
+    const lines = alwaysRead.reduce((n, f) => n + rd(f).split('\n').length, 0);
+    if (lines > BUDGET) {
+      bad(`company/facts.md + company/now.md are ${lines} lines (budget ${BUDGET}). Prune them -- a memory too long to read is worse than a short one, because it gets read in part.`);
+    } else {
+      ok(`always-read company memory is ${lines}/${BUDGET} lines`);
+    }
+  }
+}
+
+// ── now.md entries are dated ────────────────────────────────────────────
+//
+// An undated "waiting on the supplier" is true the day it is written and
+// indistinguishable from true a year later. Dating is the only thing that lets
+// a later session tell a live item from a fossil.
+{
+  const f = 'company/now.md';
+  if (fs.existsSync(path.join(ROOT, f))) {
+    const undated = rd(f).split('\n')
+      .filter((l) => l.startsWith('## '))
+      .filter((l) => !/^## \d{4}-\d{2}-\d{2}/.test(l));
+    if (undated.length) bad(`${f}: ${undated.length} entr(ies) with no date -- a later session cannot tell those from fossils`);
+    else ok('every now.md entry is dated');
   }
 }
 

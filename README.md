@@ -87,6 +87,24 @@ Code locally instead, or expose the install at a URL.
 `bin/tama` says exactly this when a request cannot connect, so you will not
 have to remember it.
 
+## company/ and memory/
+
+Two memories that survive between sessions, kept apart because what belongs in
+each is decided differently.
+
+**`company/`** — running the company. Split by how long a thing stays true:
+`facts.md` rarely changes, `now.md` is in flight and every entry is dated,
+`decisions.md` is why-we-chose-that and is never read whole. The first two have
+a 200-line budget enforced by `scripts/check.mjs`, because past a certain size
+an agent reads *part* of a file and answers confidently from half the picture —
+and here there is no API to check against.
+
+`company/README.md` also lists what must never go in: credentials, personal
+data about identifiable people, anything under someone else's confidentiality,
+and the full text of documents that have a canonical home. Git history is
+permanent, every clone copies it, and all of it enters a model's context each
+session — so the rule is write the pointer, not the content.
+
 ## memory/
 
 Notes that outlive a session, so the next one does not relearn what the last

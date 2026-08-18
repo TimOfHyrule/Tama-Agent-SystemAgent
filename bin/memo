@@ -19,40 +19,67 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'memory');
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+// Two memories, deliberately kept apart -- memory/ is about operating
+// Tamarada, company/ is about running the company, and the rule governing what
+// belongs is different in each (see their READMEs). One command writes to
+// both, because a second command to remember is a command nobody uses.
+const DIRS = ['memory', 'company'];
 const MARKER = '<!-- bin/memo appends below this line -->';
 
-const topics = fs.existsSync(DIR)
-  ? fs.readdirSync(DIR).filter((f) => f.endsWith('.md') && f !== 'README.md').map((f) => f.replace(/\.md$/, ''))
-  : [];
+const topics = new Map(); // topic -> absolute file
+for (const d of DIRS) {
+  const dir = path.join(ROOT, d);
+  if (!fs.existsSync(dir)) continue;
+  for (const f of fs.readdirSync(dir)) {
+    if (!f.endsWith('.md') || f === 'README.md') continue;
+    const name = f.replace(/\.md$/, '');
+    // A name in both directories would silently write to whichever was
+    // scanned first. Qualify it rather than guess.
+    if (topics.has(name)) {
+      topics.set(`${d}/${name}`, path.join(dir, f));
+      const [firstDir] = topics.get(name).split(path.sep).slice(-2);
+      topics.set(`${firstDir}/${name}`, topics.get(name));
+      topics.delete(name);
+    } else {
+      topics.set(name, path.join(dir, f));
+    }
+  }
+}
 
 const [topic, ...rest] = process.argv.slice(2);
 const text = rest.join(' ').trim();
 
+const names = [...topics.keys()].sort();
 if (!topic || !text) {
   console.error('usage: bin/memo <topic> "<what happened>"');
-  console.error(`topics: ${topics.join(', ') || '(none yet)'}`);
+  console.error(`topics: ${names.join(', ') || '(none yet)'}`);
   process.exit(2);
 }
-if (!topics.includes(topic)) {
-  console.error(`No memory/${topic}.md. Topics: ${topics.join(', ')}`);
-  console.error('Add a genuinely new topic by creating the file with the same header + marker.');
+if (!topics.has(topic)) {
+  console.error(`No such topic "${topic}". Topics: ${names.join(', ')}`);
+  console.error('Add a genuinely new one by creating the file with the same header + marker.');
   process.exit(2);
 }
 
-const file = path.join(DIR, `${topic}.md`);
+const file = topics.get(topic);
+const shown = path.relative(ROOT, file);
 const src = fs.readFileSync(file, 'utf8');
 if (!src.includes(MARKER)) {
-  console.error(`memory/${topic}.md has lost its append marker; add it back or edit by hand.`);
+  console.error(`${shown} has lost its append marker; add it back or edit by hand.`);
   process.exit(1);
 }
 
 // Date only. A time would suggest the ordering within a day carries meaning,
 // and it does not -- these are notes, not a log.
 const day = new Date().toISOString().slice(0, 10);
+// A date typed into the text as well would render as "2026-08-18 · 2026-08-18
+// · ...". People do this because company/now.md's own rule is that entries are
+// dated, so writing one feels required.
+const body = text.replace(/^\d{4}-\d{2}-\d{2}\s*[·:-]?\s*/, '');
 // Newest first: what was learned last week is likelier to matter than what was
 // learned in March, and a file read top-down should hit it first.
-const entry = `\n## ${day} · ${text}\n`;
+const entry = `\n## ${day} · ${body}\n`;
 fs.writeFileSync(file, src.replace(MARKER, MARKER + '\n' + entry.trimEnd() + '\n'));
-console.log(`memory/${topic}.md  +  ${day} · ${text}`);
+console.log(`${shown}  +  ${day} · ${body}`);
 console.log('Commit and push it, or the next session on another machine never sees it.');

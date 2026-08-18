@@ -19,6 +19,30 @@ is missing, say so and offer to run `bin/tama login` — it prints a code the
 human types into Setup → Agents, and prints back a token to export. Do not look
 for a key in the repo, and never write one into a file here.
 
+## Two memories, read both
+
+`git pull` first, then read:
+
+- **`company/`** — running the company. `facts.md` (rarely changes) and
+  `now.md` (in flight, every entry dated) are read IN FULL every session;
+  `decisions.md` is grepped when a question comes up, not read whole.
+- **`memory/`** — operating Tamarada. See below.
+
+They are separate because the rule for what belongs differs. `memory/` holds
+only what Tamarada cannot be asked, because it CAN be asked. Almost nothing
+about a company can be looked up anywhere, so `company/` is governed by how
+long a thing stays true instead — read `company/README.md` before writing
+there, including the list of what must never go in at all.
+
+**Never put in either:** credentials, personal data about identifiable people,
+anything under someone else's confidentiality, or the full text of a document
+that has a canonical home elsewhere. Git history is permanent, every clone
+copies it, and all of it enters a model's context each session. Write the
+pointer, not the content.
+
+If `now.md` has an entry whose date is old and you cannot confirm it still
+holds, say so and ask — do not carry it forward as fact.
+
 ## Start by reading memory/
 
 `memory/` is what previous sessions learned. You have none of it otherwise, and
@@ -26,8 +50,7 @@ on this platform relearning something usually means another failed run, which
 spends real money.
 
 Read `memory/README.md` first — it says what belongs there — then the topic
-files. They are short on purpose. `git pull` before you start, so you are
-reading what the last session actually wrote rather than a stale checkout.
+files. They are short on purpose.
 
 **Write to it when any of these happens, using `bin/memo <topic> "..."`:**
 
