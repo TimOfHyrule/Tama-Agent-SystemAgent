@@ -43,12 +43,76 @@ const emit = (text) => {
   process.exit(0);
 };
 
-if (!process.env.TAMARADA_URL || !process.env.TAMARADA_KEY) {
+if (!process.env.TAMARADA_URL) {
   emit(
-    'COMPANY MEMORY: unavailable this session -- TAMARADA_URL / TAMARADA_KEY are not set.\n' +
-    'Tell the human this in your first message, and offer `bin/tama login`. Do not answer ' +
+    'COMPANY MEMORY: unavailable this session -- TAMARADA_URL is not set.\n' +
+    'Tell the human in your first message: it goes in the cloud environment settings at ' +
+    'claude.ai/code (the cloud icon above the message box, then the gear). Do not answer ' +
     'questions about the company from guesses; you have no memory of previous sessions.',
   );
+}
+
+// No key, but we know where the install is -- so do not just report the
+// problem, start solving it. The session asks for a grant here and hands the
+// human the code, which turns "you have no credential" from something they
+// have to go and read about into something they finish in two clicks.
+//
+// It has to be the --start half. The plain `bin/tama login` prints the code
+// and THEN blocks for five minutes polling, so through a chat the person
+// would not see the code until the wait was already over -- the one shape
+// that cannot work here.
+if (!process.env.TAMARADA_KEY) {
+  let started;
+  try {
+    started = execFileSync(path.join(ROOT, 'bin/tama'), ['login', '--start', 'Claude Code'],
+      { encoding: 'utf8', timeout: 20000 });
+  } catch (err) {
+    emit(
+      'COMPANY MEMORY: no TAMARADA_KEY, and asking for one failed.\n' +
+      `${`${err.stdout ?? ''}${err.stderr ?? ''}`.trim() || err.message}\n\n` +
+      'Tell the human. If this says the host could not be reached, the likely cause is the ' +
+      "cloud environment's Network access -- it must be Custom with the Tamarada domain listed, " +
+      'or the session cannot reach it at all.',
+    );
+  }
+  const val = (k) => (started.match(new RegExp(`^${k} (.+)$`, 'm')) || [])[1] || '';
+  const userCode = val('USER_CODE');
+  const deviceCode = val('DEVICE_CODE');
+  const mins = Math.floor(Number(val('EXPIRES_IN_SECONDS') || 0) / 60);
+
+  emit([
+    'COMPANY MEMORY: no credential yet -- but a sign-in code has already been requested for you.',
+    '',
+    `  Code:      ${userCode}`,
+    `  Enter at:  ${val('WHERE')}`,
+    `  Expires:   ${mins} minutes`,
+    '',
+    '── Your FIRST message must be this, and nothing else ──',
+    '',
+    `Show them the code ${userCode} and where to type it. Say it expires in ${mins} minutes.`,
+    'Tell them to approve it WITHOUT ticking full access. A sandboxed token can see only the',
+    'pages it creates itself, so it gets its own memory and nothing else in the account -- and',
+    'they can still read and edit that memory from the UI, because their own login sees every',
+    'page. Full access would work too and is strictly worse.',
+    'Then STOP and end your turn -- they cannot approve it while you are still working, and',
+    'they cannot see the code until you do.',
+    '',
+    'When they say they have approved it, run:',
+    '',
+    `    bin/tama login --collect ${deviceCode}`,
+    '',
+    'It prints APPROVED and then the token. Give them the token and tell them to add it as',
+    'TAMARADA_KEY in the cloud environment settings at claude.ai/code -- the same dialog the',
+    'URL is in. It does NOT take effect in this session: a session copies the variables once',
+    'at startup, so it applies to the next one they open. Say that plainly rather than letting',
+    'them wonder why nothing changed.',
+    '',
+    'If it prints PENDING they have not finished; wait for them and run it again. If EXPIRED,',
+    'start over with `bin/tama login --start`.',
+    '',
+    'Until then you have no company memory. Do not answer questions about the company from',
+    'guesses.',
+  ].join('\n'));
 }
 
 let out;
@@ -59,9 +123,14 @@ try {
   const said = `${err.stdout ?? ''}${err.stderr ?? ''}`.trim();
   if (said.includes('bin/mem setup')) {
     emit(
-      'COMPANY MEMORY: not set up yet on this Tamarada install.\n' +
-      'Say so in your first message and offer to run `bin/mem setup`, which creates the page ' +
-      'and collection. Until then there is no memory of previous sessions.',
+      'COMPANY MEMORY: not set up yet.\n' +
+      'Offer to run `bin/mem setup`, which creates the page and collection. Until then there ' +
+      'is no memory of previous sessions.\n\n' +
+      'This is the EXPECTED state on the first session after signing in, and it is not a ' +
+      'problem to apologise for: a sandboxed token can only see pages it created itself, so ' +
+      'the memory has to be made once from inside the sandbox. Say that, run setup, and move ' +
+      'on. The human can still read and edit it in the UI afterwards -- their own login sees ' +
+      'every page, sandboxed or not.',
     );
   }
   emit(

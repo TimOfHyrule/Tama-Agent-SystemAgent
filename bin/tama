@@ -62,8 +62,49 @@ if (argv[0] === 'login') {
     });
     return r.json();
   };
-  const label = argv.slice(1).join(' ') || 'Claude Code';
+  // Split into two halves for the agent flow, because the blocking version
+  // below cannot work through a chat: the code is printed and THEN the process
+  // waits, so a person driving Claude would not see the code until the wait
+  // was already over. --start prints and exits; --collect picks it up after
+  // they say they have approved it. The plain blocking form stays for a
+  // terminal, where printing and waiting in one breath is exactly right.
+  const startOnly = argv.includes('--start');
+  const collectIdx = argv.indexOf('--collect');
+
+  if (collectIdx !== -1) {
+    const deviceCode = argv[collectIdx + 1];
+    if (!deviceCode) { console.error('usage: bin/tama login --collect <deviceCode>'); process.exit(2); }
+    const res = await post('/api/device/collect', { deviceCode });
+    if (res.status === 'approved') {
+      console.log('APPROVED');
+      console.log(res.token);
+      process.exit(0);
+    }
+    if (res.status === 'denied') { console.error('DENIED -- the request was turned down.'); process.exit(1); }
+    if (res.status === 'expired') {
+      console.error('EXPIRED -- the code was not entered in time. Start again with: bin/tama login --start');
+      process.exit(1);
+    }
+    // Still pending. Not an error: the person has probably not finished
+    // walking to the other window yet.
+    console.error('PENDING -- not approved yet. Enter the code, then run this again.');
+    process.exit(3);
+  }
+
+  const label = argv.slice(1).filter((a) => !a.startsWith('--')).join(' ') || 'Claude Code';
   const { deviceCode, userCode, expiresInSeconds } = await post('/api/device/request', { label });
+
+  if (startOnly) {
+    // Machine-readable on purpose: this is read by the session-start hook and
+    // handed to a model, so the two values it must not garble get their own
+    // labelled lines rather than being dug out of prose.
+    console.log(`USER_CODE ${userCode}`);
+    console.log(`DEVICE_CODE ${deviceCode}`);
+    console.log(`EXPIRES_IN_SECONDS ${expiresInSeconds}`);
+    console.log(`WHERE ${BASE} -> Setup -> Agents`);
+    process.exit(0);
+  }
+
   console.log(`\n  Open ${BASE} -> Setup -> Agents, and enter:\n\n      ${userCode}\n`);
   console.log(`  Waiting (expires in ${Math.floor(expiresInSeconds / 60)} min)…\n`);
   const deadline = Date.now() + expiresInSeconds * 1000;
@@ -93,7 +134,7 @@ if (!KEY) {
 const allowPaid = argv.includes('--paid');
 const [method, route, body] = argv.filter((a) => a !== '--paid');
 if (!method || !route) {
-  console.error('usage: bin/tama login [label]\n       bin/tama <METHOD> <path> [json] [--paid]');
+  console.error('usage: bin/tama login [label]            print a code and wait\n       bin/tama login --start                 print a code and exit\n       bin/tama login --collect <deviceCode>  pick up the token afterwards\n       bin/tama <METHOD> <path> [json] [--paid]');
   process.exit(2);
 }
 

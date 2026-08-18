@@ -11,6 +11,21 @@ bin/mem add decision "..."                 # what was chosen, and why
 bin/mem forget <recordId>
 ```
 
+## Signing in, once
+
+A session with no `TAMARADA_KEY` asks for a code by itself and hands it to you —
+you type it at **Setup → Agents**, and it prints back a token to put in the
+cloud environment settings as `TAMARADA_KEY`.
+
+**Approve it without ticking full access.** A sandboxed token can only see the
+pages it creates itself, so the first session runs `bin/mem setup` and the agent
+ends up with its own memory page and no view of anything else in the account.
+You still read and edit that page normally in the UI — your own login sees every
+page, sandboxed or not. Full access works too and is strictly worse.
+
+So "not set up yet" on the first session after signing in is the expected state,
+not a fault.
+
 ## Why it is not in this repo
 
 It started as `company/*.md` here, and moved for one reason that no amount of
