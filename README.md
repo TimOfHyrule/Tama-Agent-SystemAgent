@@ -147,10 +147,18 @@ nowhere. It also refuses to let a real key be committed, while ignoring the
 placeholders in this file.
 
 The contract check needs to reach Project-Station, which is private. Add a
-repository secret named **`TAMARADA_REPO_TOKEN`** with read access to it and
-the weekly run will tell you when the copy here has drifted. Without the
-secret that step **skips rather than fails** — a workflow that goes red for a
-missing secret just teaches everyone that red is normal.
+repository secret named **`TAMARADA_REPO_TOKEN`** and the weekly run will tell
+you when the copy here has drifted. Without the secret that step **skips rather
+than fails** — a workflow that goes red for a missing secret just teaches
+everyone that red is normal.
+
+Make it a fine-grained token at
+<https://github.com/settings/personal-access-tokens/new> with **Only select
+repositories → Project-Station** and **Repository permissions → Contents →
+Read-only**. Nothing else. If it comes back 403 or 404, that is what to
+re-check: GitHub returns 404 rather than 403 when a token cannot see a private
+repo at all, and `Write access to repository not granted` on a read means the
+token cannot see the repo, not that it needs write.
 
 ## What this does not do
 

@@ -34,14 +34,19 @@ jobs:
       # SKIPPED, not failed, when the secret is absent. A workflow that goes
       # red because somebody has not set up a secret teaches people that red is
       # normal, and then a real failure looks the same as the usual one.
+      # The token goes in an Authorization header, not into a clone URL. The
+      # URL form failed with `remote: Write access to repository not granted`
+      # on what was a pure read -- a message that sends you off to check write
+      # permissions you never needed. It fetches the one file over the API now,
+      # which is also the right shape: cloning a whole repository to read a
+      # single file was never it.
       - name: Is the contract still current?
         env:
-          TOKEN: ${{ secrets.TAMARADA_REPO_TOKEN }}
+          TAMARADA_REPO_TOKEN: ${{ secrets.TAMARADA_REPO_TOKEN }}
         run: |
-          if [ -z "$TOKEN" ]; then
-            echo "::notice::Skipped -- set the TAMARADA_REPO_TOKEN secret (read access to Project-Station) to enable this."
+          if [ -z "$TAMARADA_REPO_TOKEN" ]; then
+            echo "::notice::Skipped -- set the TAMARADA_REPO_TOKEN secret (Contents: Read-only on Project-Station) to enable this."
             echo "Until then, run scripts/sync-contract.sh --check by hand after changing routes."
             exit 0
           fi
-          TAMARADA_REPO_URL="https://x-access-token:${TOKEN}@github.com/TimOfHyrule/Project-Station.git" \
-            scripts/sync-contract.sh --check
+          scripts/sync-contract.sh --check
