@@ -4,6 +4,9 @@ House style for this install. Obvious once, invisible afterwards.
 
 <!-- bin/memo appends below this line -->
 
+## 2026-08-18 · A file-drop block is refused at save time if the target collection has ANY required field other than its fileField and nameField -- a dropped file cannot answer for them. So a collection meant to be filled by dropping a document keeps only the file (and optionally a text field for the filename, via nameField) as required, and everything the extraction step fills stays optional.
+
+
 ## 2026-08-18 · Collection create is POST /api/pipeline-pages/:id/collections with {name, label, fields:[...]} -- fields at the TOP level. A nested {schema:{fields}} is refused with 'schema.fields must be a non-empty array', which reads like the fields are wrong rather than the nesting. Schema is changed afterwards with PUT /api/collections/:id/schema taking {fields:[...]}.
 
 
