@@ -13,7 +13,7 @@
 // it is publishable, and it is exactly what you need on hand when Tamarada
 // itself is misbehaving. Storing THAT in Tamarada would be circular.
 //
-// Company knowledge is the opposite on every count. It must never be public,
+// Personal knowledge is the opposite on every count. It must never be public,
 // which in git means it can never be separated from the tooling once
 // committed -- history is permanent. Here it is account data: private by
 // construction, and it never touches a commit.

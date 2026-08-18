@@ -4,6 +4,33 @@ This repo is not an application. It is a place to stand while operating a
 **Tamarada** install over its HTTP API — building pages, collections, modules
 and SOPs, and reading back what happened.
 
+## Answer the question that was asked
+
+The failure mode this file has actually produced: asked to *introduce
+Tamarada*, a session replied with six headed sections, three tables, a route
+inventory, a spending breakdown and a survey of the account's six pages. All of
+it was true and almost none of it was wanted.
+
+You have an API that answers everything, so the temptation is to answer
+everything. Resist it. The cost is not tokens, it is that a reply nobody
+finishes is a reply nobody read, and the one line that mattered is buried in it.
+
+- **Match the length to the question.** "What is Tamarada" wants a paragraph.
+  It does not want the object model, the money rules and an audit of what
+  exists.
+- **Don't inventory unprompted.** Do not list the account's pages, SOPs,
+  modules or spend unless that is what was asked. Reading them to orient
+  yourself is fine; reporting them is not.
+- **One thing at a time.** If something else genuinely needs saying, say it in
+  a sentence at the end, or ask whether they want it — do not append a section.
+- **No tables unless comparing.** A table for three facts is a wall.
+- **Stop when you are done.** A closing offer of next steps is one line, not a
+  menu.
+
+The exception is when you are asked for depth, or when a WARNING is genuinely
+load-bearing — that this token is not sandboxed, that a route is about to spend
+money. Say those plainly and briefly, and never bury them in a survey.
+
 ## How to call it
 
 Always through the wrapper. It carries the auth headers and refuses the routes
@@ -19,29 +46,49 @@ is missing, say so and offer to run `bin/tama login` — it prints a code the
 human types into Setup → Agents, and prints back a token to export. Do not look
 for a key in the repo, and never write one into a file here.
 
+**Never print the key itself.** Not with `echo`, not in a summary, not "so you
+can check it is set", not into a file, a commit, or a message. You can read it —
+anything you can use, you can read, and there is no way around that — so the
+rule has to be about what you do with it.
+
+The reason is specific: a session's whole transcript can be shared, and on a Pro
+or Max account a shared session is visible to anyone signed in to claude.ai. A
+key that only ever lived in an environment variable stays out of that. One that
+you echoed once is in the transcript for good.
+
+To check it is set, test for it and say nothing more:
+
+```bash
+[ -n "$TAMARADA_KEY" ] && echo "key is set"     # never echo the value
+```
+
+`bin/tama login` is the one place a token is printed, because printing it is the
+entire point of that command. Even there: hand it over and do not repeat it back
+afterwards.
+
 ## Two memories, read both
 
 They are in different places, and that is deliberate rather than accidental.
 
-**Company knowledge — in Tamarada.** You do not have to fetch it: a SessionStart
+**Personal knowledge — in Tamarada.** You do not have to fetch it: a SessionStart
 hook runs `bin/mem` and hands you the notes before your first message, together
 with instructions for going through them with the human. Do that first, every
 session — it is the point of the hook, and skipping it is how a wrong note
 survives for months.
 
-If no `COMPANY MEMORY:` block reached you, the hook did not run. Say so and run
+If no `PERSONAL MEMORY:` block reached you, the hook did not run. Say so and run
 `bin/mem` yourself rather than proceeding as though there is nothing to know.
 
 Write to it with `bin/mem add <fact|now|decision> "..."` — no commit needed, it
 is saved the moment the command returns. It is a collection, so the human can
 read and edit the same thing as a table in the product. Read
-`docs/COMPANY_MEMORY.md` before writing, including the list of what must never
+`docs/PERSONAL_MEMORY.md` before writing, including the list of what must never
 go in at all.
 
 **Operating knowledge — in this repo, `memory/`.** `git pull` first. See the
 next section.
 
-The split is not tidiness. Company knowledge must never become public, and in
+The split is not tidiness. Personal knowledge must never become public, and in
 git that is a one-way door: deleting a file later leaves it in the history, in
 every clone, forever. Operating knowledge is the opposite — technical,
 publishable, and the thing you need on hand *precisely when Tamarada is not
@@ -49,7 +96,7 @@ answering*, which is exactly when a Tamarada-backed memory would be no help.
 
 The rule for what belongs also differs. `memory/` holds only what Tamarada
 cannot be asked, because it CAN be asked. Almost nothing about a company can be
-looked up anywhere, so the company side is governed by how long a thing stays
+looked up anywhere, so the personal side is governed by how long a thing stays
 true instead.
 
 **Never put in either:** credentials, personal data about identifiable people,
@@ -65,7 +112,7 @@ somebody to skip the next one.
 
 Ask about nothing else. Every other note is current, and questioning what is
 already right is exactly how the whole step becomes noise. If Tamarada was
-unreachable, say you have no company memory this session rather than answering
+unreachable, say you have no personal memory this session rather than answering
 from guesses.
 
 ## Start by reading memory/

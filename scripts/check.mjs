@@ -85,7 +85,7 @@ const bad = (m) => { console.error(`  FAIL ${m}`); failed++; };
 // ── Nothing still points at the company files that moved ───────────
 //
 // company/facts.md, now.md and decisions.md are a Tamarada collection now
-// (docs/COMPANY_MEMORY.md says why). Two checks used to live here ── a 200-line
+// (docs/PERSONAL_MEMORY.md says why). Two checks used to live here ── a 200-line
 // budget on the always-read ones and a rule that every now.md entry carried a
 // date ── and both are deleted rather than ported, because the platform stamps
 // createdAt itself and bin/mem prunes per note.
@@ -105,14 +105,14 @@ const bad = (m) => { console.error(`  FAIL ${m}`); failed++; };
     // separates them.
     return /company\/(facts|now|decisions)\.md/.test(rd(f));
   });
-  if (stale.length) bad(`points at a company file that moved into Tamarada: ${stale.join(', ')} ── see docs/COMPANY_MEMORY.md`);
+  if (stale.length) bad(`points at a company file that moved into Tamarada: ${stale.join(', ')} ── see docs/PERSONAL_MEMORY.md`);
   else ok('nothing points at the company files that moved');
 }
 
 // ── bin/mem and its documentation agree on the kinds ────────────────
 //
 // The same class of failure as bin/tama above: a doc text-matching a tool it
-// does not own. docs/COMPANY_MEMORY.md tells the reader which kinds exist, and
+// does not own. docs/PERSONAL_MEMORY.md tells the reader which kinds exist, and
 // bin/mem rejects anything else ── so a kind added to one and not the other is
 // either a documented command that errors, or a working one nobody knows about.
 {
@@ -122,9 +122,9 @@ const bad = (m) => { console.error(`  FAIL ${m}`); failed++; };
     bad('bin/mem: could not find the list of kinds it accepts');
   } else {
     const kinds = [...m[1].matchAll(/'([a-z]+)'/g)].map((x) => x[1]);
-    const doc = rd('docs/COMPANY_MEMORY.md');
+    const doc = rd('docs/PERSONAL_MEMORY.md');
     const undocumented = kinds.filter((k) => !doc.includes(`\`${k}\``));
-    if (undocumented.length) bad(`bin/mem accepts ${undocumented.join(', ')}, which docs/COMPANY_MEMORY.md never mentions`);
+    if (undocumented.length) bad(`bin/mem accepts ${undocumented.join(', ')}, which docs/PERSONAL_MEMORY.md never mentions`);
     else ok(`bin/mem's ${kinds.length} kinds are all documented`);
   }
 }
@@ -134,7 +134,7 @@ const bad = (m) => { console.error(`  FAIL ${m}`); failed++; };
 // The same shape as everything else here: .claude/settings.json names a script
 // by PATH, and nothing anywhere resolves that name until a session starts. Move
 // or rename the file and no error appears -- the hook simply does not run, and
-// every session quietly begins with no company memory while looking completely
+// every session quietly begins with no personal memory while looking completely
 // normal. That is the one failure mode this repo keeps rediscovering, so it
 // gets a check rather than a convention.
 {
@@ -144,7 +144,7 @@ const bad = (m) => { console.error(`  FAIL ${m}`); failed++; };
   if (settings) {
     const cmds = (settings.hooks?.SessionStart ?? []).flatMap((g) => g.hooks ?? []).map((h) => h.command ?? '');
     if (!cmds.length) {
-      bad('.claude/settings.json: no SessionStart hook -- sessions would start with no company memory');
+      bad('.claude/settings.json: no SessionStart hook -- sessions would start with no personal memory');
     } else {
       // $CLAUDE_PROJECT_DIR is the repo root at run time, so stripping it
       // gives a path this script can actually check for.
@@ -167,10 +167,50 @@ const bad = (m) => { console.error(`  FAIL ${m}`); failed++; };
   // The hook hands the session a block the agent is told to look for by name.
   // If one side is reworded, the instruction in CLAUDE.md sends somebody
   // hunting for a string that is never emitted.
-  const marker = 'COMPANY MEMORY';
+  const marker = 'PERSONAL MEMORY';
   if (!rd('scripts/sessionMemory.mjs').includes(marker)) bad(`scripts/sessionMemory.mjs no longer emits "${marker}"`);
   else if (!rd('CLAUDE.md').includes(marker)) bad(`CLAUDE.md no longer mentions "${marker}", which the hook emits`);
   else ok(`hook and CLAUDE.md agree on the "${marker}" marker`);
+}
+
+// ── Nothing tells the agent to print the key ────────────────────────
+//
+// The leak check below catches a key that is already in a tracked file. This
+// catches the instruction that would put one there. `echo $TAMARADA_KEY` is
+// the natural way to "check it is set", and it writes the credential into a
+// transcript that can be shared publicly from a Pro or Max account -- so the
+// documented way to check has to test for the variable without printing it,
+// and no file here may demonstrate otherwise.
+{
+  const tracked = fs.readdirSync(ROOT, { recursive: true })
+    .filter((f) => typeof f === 'string' && !f.startsWith('.git/') && !f.startsWith('node_modules'))
+    .filter((f) => fs.statSync(path.join(ROOT, f)).isFile());
+  const echoes = tracked.filter((f) => {
+    if (f === 'scripts/check.mjs') return false; // this check names the pattern
+    // Printing the VALUE. `[ -n "$TAMARADA_KEY" ]` and `${TAMARADA_KEY:+set}`
+    // are the safe forms and must keep passing, so the match is on echo/print
+    // reaching a bare expansion.
+    return /(echo|printf|console\.log)[^\n]*\$\{?TAMARADA_KEY\}?(?![:+])/.test(rd(f));
+  });
+  if (echoes.length) bad(`${echoes.join(', ')} prints the key's value -- a shared transcript keeps it for ever`);
+  else ok('nothing here prints the key itself');
+}
+
+// ── The two behavioural rules are still in CLAUDE.md ────────────────
+//
+// Both exist because a session did the wrong thing in front of the person who
+// owns this install: one answered "introduce Tamarada" with a six-section
+// audit, the other could have echoed a credential into a shareable transcript.
+// Neither rule is enforceable by anything else here, so the least this can do
+// is notice if the text goes missing in an edit.
+{
+  const md = rd('CLAUDE.md');
+  const missing = [
+    ['brevity', 'Answer the question that was asked'],
+    ['key handling', 'Never print the key itself'],
+  ].filter(([, marker]) => !md.includes(marker));
+  if (missing.length) bad(`CLAUDE.md lost the ${missing.map(([n]) => n).join(' and ')} rule(s)`);
+  else ok('CLAUDE.md still carries the brevity and key-handling rules');
 }
 
 // ── Nothing secret got committed ────────────────────────────────────────

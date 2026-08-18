@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // What a session is told before it does anything else.
 //
-// Run by .claude/hooks/session-start.sh. It reads the company memory out of
+// Run by .claude/hooks/session-start.sh. It reads the personal memory out of
 // Tamarada and hands it to the session as context, together with an
 // instruction to go through it WITH the human rather than absorb it silently.
 //
@@ -45,10 +45,10 @@ const emit = (text) => {
 
 if (!process.env.TAMARADA_URL) {
   emit(
-    'COMPANY MEMORY: unavailable this session -- TAMARADA_URL is not set.\n' +
+    'PERSONAL MEMORY: unavailable this session -- TAMARADA_URL is not set.\n' +
     'Tell the human in your first message: it goes in the cloud environment settings at ' +
-    'claude.ai/code (the cloud icon above the message box, then the gear). Do not answer ' +
-    'questions about the company from guesses; you have no memory of previous sessions.',
+    'claude.ai/code (the cloud icon above the message box, then the gear). You have no ' +
+    'record of previous sessions, so say that rather than answering from guesses.',
   );
 }
 
@@ -68,7 +68,7 @@ if (!process.env.TAMARADA_KEY) {
       { encoding: 'utf8', timeout: 20000 });
   } catch (err) {
     emit(
-      'COMPANY MEMORY: no TAMARADA_KEY, and asking for one failed.\n' +
+      'PERSONAL MEMORY: no TAMARADA_KEY, and asking for one failed.\n' +
       `${`${err.stdout ?? ''}${err.stderr ?? ''}`.trim() || err.message}\n\n` +
       'Tell the human. If this says the host could not be reached, the likely cause is the ' +
       "cloud environment's Network access -- it must be Custom with the Tamarada domain listed, " +
@@ -81,7 +81,7 @@ if (!process.env.TAMARADA_KEY) {
   const mins = Math.floor(Number(val('EXPIRES_IN_SECONDS') || 0) / 60);
 
   emit([
-    'COMPANY MEMORY: no credential yet -- but a sign-in code has already been requested for you.',
+    'PERSONAL MEMORY: no credential yet -- but a sign-in code has already been requested for you.',
     '',
     `  Code:      ${userCode}`,
     `  Enter at:  ${val('WHERE')}`,
@@ -110,8 +110,8 @@ if (!process.env.TAMARADA_KEY) {
     'If it prints PENDING they have not finished; wait for them and run it again. If EXPIRED,',
     'start over with `bin/tama login --start`.',
     '',
-    'Until then you have no company memory. Do not answer questions about the company from',
-    'guesses.',
+    'Until then you have no personal memory. Say so when it is relevant rather than',
+    'answering from guesses.',
   ].join('\n'));
 }
 
@@ -123,7 +123,7 @@ try {
   const said = `${err.stdout ?? ''}${err.stderr ?? ''}`.trim();
   if (said.includes('bin/mem setup')) {
     emit(
-      'COMPANY MEMORY: not set up yet.\n' +
+      'PERSONAL MEMORY: not set up yet.\n' +
       'Offer to run `bin/mem setup`, which creates the page and collection. Until then there ' +
       'is no memory of previous sessions.\n\n' +
       'This is the EXPECTED state on the first session after signing in, and it is not a ' +
@@ -134,9 +134,9 @@ try {
     );
   }
   emit(
-    `COMPANY MEMORY: could not be read.\n${said || err.message}\n\n` +
-    'Tell the human in your first message. Do not answer questions about the company from ' +
-    'guesses -- say plainly that memory was unreachable this session.',
+    `PERSONAL MEMORY: could not be read.\n${said || err.message}\n\n` +
+    'Tell the human in your first message, and say plainly that memory was unreachable ' +
+    'this session rather than answering from guesses.',
   );
 }
 
@@ -154,7 +154,7 @@ const walkthrough = source === 'startup' || source === 'clear';
 
 if (empty) {
   emit(
-    'COMPANY MEMORY: empty. Nothing has been written yet.\n' +
+    'PERSONAL MEMORY: empty. Nothing has been written yet.\n' +
     (walkthrough
       ? 'Mention this once, briefly, and offer to start it: `bin/mem add fact "..."`. Do not interrogate them for facts.'
       : ''),
@@ -182,4 +182,4 @@ const instruction = walkthrough
     ].join('\n')
   : '';
 
-emit(`COMPANY MEMORY (from Tamarada, read at session start):\n${out}${instruction}`);
+emit(`PERSONAL MEMORY (from Tamarada, read at session start):\n${out}${instruction}`);

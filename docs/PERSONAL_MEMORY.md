@@ -1,6 +1,6 @@
-# Company memory
+# Personal memory
 
-Company knowledge lives **in Tamarada**, in a collection, reached with
+Personal knowledge lives **in Tamarada**, in a collection, reached with
 `bin/mem`. Not in this repo. This file is the rule for what goes in it.
 
 ```bash
@@ -32,7 +32,7 @@ It started as `company/*.md` here, and moved for one reason that no amount of
 care in the files could fix: **git history is permanent**. Deleting a file in a
 later commit does not remove it — it stays in the history, in every clone, on
 every machine that ever pulled. That makes a git repo a one-way door for
-anything private, and company knowledge is exactly the thing you want to be
+anything private, and personal knowledge is exactly the thing you want to be
 able to take back.
 
 As account data it is private by construction, it never touches a commit, and
@@ -48,7 +48,7 @@ The trade, stated plainly: **it needs Tamarada reachable.** Files did not.
 That is why the technical half of the memory stayed in git — see
 `memory/README.md`. The day you most need to remember how this API behaves is
 the day the API is not behaving, and a memory that is unreachable exactly when
-things break is not a memory. Company knowledge does not have that property:
+things break is not a memory. Personal knowledge does not have that property:
 if Tamarada is down, nothing about the company is what you are working on.
 
 ## The axis: how long is this true for?
