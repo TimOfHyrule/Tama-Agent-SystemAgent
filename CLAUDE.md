@@ -51,7 +51,9 @@ has the table of what to ask instead.
 ## Read the contract before calling anything
 
 **`docs/AGENT_API.md` lists every route.** It is generated from the server and
-is the only current description of it. Do not guess a path: a guess that
+is the only current description of it. If a route you expect is missing, or the
+server refuses one this file says is fine, run `scripts/sync-contract.sh` — the
+copy here does not update itself. Do not guess a path: a guess that
 happens to resolve is worse than one that 404s, and the nearest-looking route
 to the one you wanted is often the one that charges.
 

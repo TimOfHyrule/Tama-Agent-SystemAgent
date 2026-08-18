@@ -4,6 +4,9 @@ House style for this install. Obvious once, invisible afterwards.
 
 <!-- bin/memo appends below this line -->
 
+## 2026-08-18 · Run scripts/sync-contract.sh after Tamarada's routes change; the copy here does not update itself
+
+
 ## 2026-08-18 · Ask Tamarada what exists; memory is only for what it cannot answer
 
 
