@@ -4,6 +4,9 @@ House style for this install. Obvious once, invisible afterwards.
 
 <!-- bin/memo appends below this line -->
 
+## 2026-08-18 · CI: scripts/check.mjs runs on every push; the contract-drift check needs the TAMARADA_REPO_TOKEN secret
+
+
 ## 2026-08-18 · Run scripts/sync-contract.sh after Tamarada's routes change; the copy here does not update itself
 
 

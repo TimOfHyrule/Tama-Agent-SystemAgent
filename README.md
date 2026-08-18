@@ -128,6 +128,30 @@ credentials you already have.
 `--check` writes nothing and exits 1 when stale, so it works as a pre-commit
 hook or a CI step if you would rather not remember.
 
+## Checks
+
+```bash
+node scripts/check.mjs             # no credential, no network
+scripts/sync-contract.sh --check   # is the contract still what Tamarada generates?
+```
+
+CI runs the first on every push and weekly — weekly because the thing most
+likely to break here is not a change in this repo, it is a route added in
+Tamarada, which no push here would notice.
+
+`scripts/check.mjs` checks whether the machinery that USES these files still
+works on them: `bin/tama` parses `docs/AGENT_API.md` to know what to refuse,
+`bin/memo` finds a marker to append at, and either can stop matching without
+anything throwing — the guard just refuses nothing, the memo just writes
+nowhere. It also refuses to let a real key be committed, while ignoring the
+placeholders in this file.
+
+The contract check needs to reach Project-Station, which is private. Add a
+repository secret named **`TAMARADA_REPO_TOKEN`** with read access to it and
+the weekly run will tell you when the copy here has drifted. Without the
+secret that step **skips rather than fails** — a workflow that goes red for a
+missing secret just teaches everyone that red is normal.
+
 ## What this does not do
 
 It does not make Tamarada cheaper to *run*. Your Claude subscription pays for
