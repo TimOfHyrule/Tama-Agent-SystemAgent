@@ -171,6 +171,15 @@ if (cmd === 'forget') {
   process.exit(0);
 }
 
+// Anything left that is not a recognised command is a typo, not a request to
+// read. `bin/mem forgt <id>` would otherwise print the whole memory and exit
+// 0 -- a mistake that looks exactly like a success, which is the one kind
+// worth spending three lines to prevent.
+if (cmd) {
+  console.error(`No such command "${cmd}". Try: setup, add, forget, or nothing at all to read.`);
+  process.exit(2);
+}
+
 // Default: read it all back.
 const { records } = await api('GET', `/api/collections/${at.collectionId}/records`);
 if (!records.length) {
