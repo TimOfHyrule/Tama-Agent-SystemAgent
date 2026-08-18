@@ -45,21 +45,55 @@ if [ -n "${TAMARADA_REPO:-}" ] && [ -d "$TAMARADA_REPO" ]; then
   cp "$TAMARADA_REPO/$CONTRACT_PATH" "$fresh"
 
 elif [ -n "${TAMARADA_REPO_TOKEN:-}" ]; then
+  # Trimmed: a secret pasted with a trailing newline produces a malformed
+  # header and an error that looks nothing like "you copied it wrong".
+  TOKEN="$(printf '%s' "$TAMARADA_REPO_TOKEN" | tr -d '[:space:]')"
   echo "Fetching $CONTRACT_PATH from $OWNER_REPO"
   code=$(curl -sS -o "$fresh" -w '%{http_code}' \
-    -H "Authorization: Bearer $TAMARADA_REPO_TOKEN" \
+    -H "Authorization: Bearer $TOKEN" \
     -H "Accept: application/vnd.github.raw" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
     "https://api.github.com/repos/$OWNER_REPO/contents/$CONTRACT_PATH")
-  # Each code means a different thing to go and fix, and the raw body is JSON
-  # nobody wants to read at 9am.
-  case "$code" in
-    200) : ;;
-    401) echo "401 — the token is invalid or has expired. Make a new one." >&2; exit 1 ;;
-    403) echo "403 — the token cannot read $OWNER_REPO. Check its 'Contents: Read-only' permission, and that the repo is selected under 'Only select repositories'. If the repo belongs to an organisation, the token's resource owner must be that org and an admin may have to approve it." >&2; exit 1 ;;
-    404) echo "404 — $OWNER_REPO not visible to this token. Same causes as 403; GitHub returns 404 rather than 403 when a token cannot see a private repo at all." >&2; exit 1 ;;
-    *)   echo "HTTP $code fetching the contract." >&2; head -c 300 "$fresh" >&2; exit 1 ;;
-  esac
+
+  # On failure, ask the API about the TOKEN itself before blaming anything.
+  # "404" alone cannot tell you whether the token is dead, belongs to the wrong
+  # account, or simply does not list this repo -- and those have completely
+  # different fixes. One extra call settles it.
+  if [ "$code" != "200" ]; then
+    who=$(curl -sS -H "Authorization: Bearer $TOKEN" \
+      -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/user \
+      | sed -n 's/.*"login"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+    kind="unrecognised"
+    case "$TOKEN" in
+      github_pat_*) kind="fine-grained" ;;
+      ghp_*)        kind="classic" ;;
+      ghs_*)        kind="app installation" ;;
+    esac
+
+    echo >&2
+    echo "Could not read $CONTRACT_PATH from $OWNER_REPO (HTTP $code)." >&2
+    if [ -z "$who" ]; then
+      echo "  The token is not valid at all — /user rejected it too. It is expired," >&2
+      echo "  revoked, or was pasted incompletely. Make a new one." >&2
+    else
+      echo "  The token itself works: it authenticates as '$who' ($kind)." >&2
+      echo "  So the problem is this repository, not the token's validity." >&2
+      echo >&2
+      if [ "$kind" = "classic" ]; then
+        echo "  A CLASSIC token needs the whole 'repo' scope to see a private repo." >&2
+        echo "  A fine-grained one is the better answer here — it can be limited to" >&2
+        echo "  this single repository, read-only." >&2
+      else
+        echo "  For a fine-grained token, 404 means this repo is not in its list at all" >&2
+        echo "  (403 would mean it IS listed but lacks the permission). Check, at" >&2
+        echo "  https://github.com/settings/personal-access-tokens :" >&2
+        echo "    - Resource owner is the account that owns $OWNER_REPO" >&2
+        echo "    - 'Only select repositories' actually includes it" >&2
+        echo "    - Repository permissions -> Contents -> Read-only" >&2
+      fi
+    fi
+    exit 1
+  fi
 
 else
   echo "No TAMARADA_REPO and no TAMARADA_REPO_TOKEN — falling back to git clone."

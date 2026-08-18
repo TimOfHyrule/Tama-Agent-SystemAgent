@@ -6,6 +6,9 @@ money on the account's key.
 
 <!-- bin/memo appends below this line -->
 
+## 2026-08-18 · A URL-embedded token on git clone reports 'Write access not granted' for a pure read; fetch the one file over the API with an Authorization header instead
+
+
 ## 2026-08-18 · A SOP step cannot hand plain text to a collection
 
 `collectionRecordWrite` needs a JSON object whose keys are the collection's
