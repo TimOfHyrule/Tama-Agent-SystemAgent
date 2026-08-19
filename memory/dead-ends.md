@@ -6,6 +6,9 @@ money on the account's key.
 
 <!-- bin/memo appends below this line -->
 
+## 2026-08-19 · SUPERSEDED, same day: the entries below saying there is no REST route to enable rules, and that a step cannot pass a value to a later step's params, are both fixed in Project-Station as of commit c5062c3. Automations now have their own routes (GET /api/automations/kinds, GET|POST /api/pipeline-pages/:id/automations with a kind, PUT|DELETE /api/automations/:recordId) which validate against the ENGINES' declarations and return the next five run times. A tool step's params may now reference an earlier step's structured meta as {{meta.records.0.id}} or {{meta:stepId.path}} -- it cannot compute, compare, branch or iterate, but it closes 'find the record, then act on it', which used to cost a second module and a rule. Revisit any two-module split designed around that limit.
+
+
 ## 2026-08-19 · Date is undefined inside a rule's sandbox (removed so a dry run is reproducible), so 'is this due' cannot use Date.parse. Compare ISO date strings instead, and derive today from the injected `now` with a civil-from-days conversion -- about ten lines every date-aware rule has to carry. Injecting a `today` alongside `now` would remove it.
 
 

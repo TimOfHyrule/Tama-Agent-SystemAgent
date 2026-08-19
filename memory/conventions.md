@@ -4,6 +4,9 @@ House style for this install. Obvious once, invisible afterwards.
 
 <!-- bin/memo appends below this line -->
 
+## 2026-08-19 · A rule's sandbox now injects 'today' as YYYY-MM-DD in the rule's own timezone, alongside 'now' and 'timezone'. The civil-from-days workaround recorded earlier is no longer needed. Also: data/collectionRecordRead and data/collectionHasRecords both take recordId now, so reading one KNOWN record no longer means betting that some data field happens to be unique.
+
+
 ## 2026-08-19 · A rule addresses one record through paramsOverride, which pipeline/runner.js keys BY STEP ID: call('Module', {'<stepId>': {recordId: r.id}}) patches that step's params for that one run. This is the whole mechanism behind per-record fan-out -- without it a tool-sourced fetch could only ever read the record hardcoded into the SOP.
 
 
