@@ -4,6 +4,9 @@ House style for this install. Obvious once, invisible afterwards.
 
 <!-- bin/memo appends below this line -->
 
+## 2026-08-19 · A rule addresses one record through paramsOverride, which pipeline/runner.js keys BY STEP ID: call('Module', {'<stepId>': {recordId: r.id}}) patches that step's params for that one run. This is the whole mechanism behind per-record fan-out -- without it a tool-sourced fetch could only ever read the record hardcoded into the SOP.
+
+
 ## 2026-08-18 · A file-drop block is refused at save time if the target collection has ANY required field other than its fileField and nameField -- a dropped file cannot answer for them. So a collection meant to be filled by dropping a document keeps only the file (and optionally a text field for the filename, via nameField) as required, and everything the extraction step fills stays optional.
 
 
