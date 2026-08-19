@@ -6,7 +6,7 @@ money on the account's key.
 
 <!-- bin/memo appends below this line -->
 
-## 2026-08-19 · Date is undefined inside a rule's sandbox (removed so a dry run is reproducible), so 'is this due' cannot use Date.parse. Compare ISO date strings instead, and derive today from the injected  with a civil-from-days conversion -- about ten lines every date-aware rule has to carry. Injecting a  alongside  would remove it.
+## 2026-08-19 · Date is undefined inside a rule's sandbox (removed so a dry run is reproducible), so 'is this due' cannot use Date.parse. Compare ISO date strings instead, and derive today from the injected `now` with a civil-from-days conversion -- about ten lines every date-aware rule has to carry. Injecting a `today` alongside `now` would remove it.
 
 
 ## 2026-08-19 · A fetch step with only an instruction and no source goes to Gemini grounded WEB SEARCH -- it cannot see this install's own collections, and it bills per grounded prompt. Reading a collection must be source:{kind:'tool',tool:'data/collectionRecordRead'}. The Position Record page's position-analysis SOP has this bug in its first step today.
