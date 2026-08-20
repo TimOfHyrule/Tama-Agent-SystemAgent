@@ -98,6 +98,25 @@ Code locally instead, or expose the install at a URL.
 `bin/tama` says exactly this when a request cannot connect, so you will not
 have to remember it.
 
+## Its other half
+
+[**Tama-Life-Assisstant**](https://github.com/TimOfHyrule/Tama-Life-Assisstant)
+is the life side of the same pair: the running of a day rather than the running
+of an install. Both read each other's memory; neither writes to the other's.
+
+Everything except `CLAUDE.md`, `memSpace.js` and `memory/` is the same code in
+both repos, and that duplication is deliberate. A session boots with its repo's
+`CLAUDE.md` in context before anybody knows which job it is, so one repo means
+one brief and a brief that covers both is half wrong whichever session you
+opened. `scripts/check.mjs` runs in both, which is what keeps the copies from
+drifting apart quietly.
+
+`memSpace.js` is the whole configuration of the split, and it states the limit
+plainly: Tamarada's page scoping is one exact-matched column, so cross-reading
+needs a **full-access** token and the write rule is enforced by `bin/mem`
+rather than by the platform. See that file, and `memory/decisions.md`, for what
+the real fix would take.
+
 ## Two memories, in two different places
 
 Both survive between sessions. They are kept apart because what belongs in each

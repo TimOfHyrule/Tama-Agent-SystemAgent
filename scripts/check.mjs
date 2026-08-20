@@ -129,6 +129,72 @@ const bad = (m) => { console.error(`  FAIL ${m}`); failed++; };
   }
 }
 
+// ── One memory is written, the rest are only read ───────────────────
+//
+// memSpace.js splits the account's memory between agents: this repo owns one
+// space and READS the others. The platform cannot hold that line -- Tamarada's
+// page scoping is a single owner column with an exact-match filter, so a token
+// that can see a peer at all can also write to it (memSpace.js has the full
+// argument). The rule therefore lives in bin/mem, which makes it exactly the
+// kind of invariant this file exists for: true because of how the code is
+// written, and quietly false the moment somebody adds a convenient flag.
+//
+// A violation would not throw. `bin/mem add --to life` would simply work, and
+// two agents would start editing one pot -- which is the failure the split was
+// created to prevent, arriving through the door marked helpful.
+{
+  const mem = rd('bin/mem');
+  let space;
+  try { space = await import(path.join(ROOT, 'memSpace.js')); }
+  catch (e) { bad(`memSpace.js will not load: ${e.message}`); }
+
+  if (!mem.includes("from '../memSpace.js'")) {
+    bad('bin/mem does not import memSpace.js -- whatever it writes to, it is not the configured space');
+  } else ok('bin/mem reads its space from memSpace.js');
+
+  if (space) {
+    const { OWN, PEERS = [] } = space;
+    const named = (s, where) => ['page', 'collection', 'label']
+      .filter((k) => !s?.[k]).map((k) => `${where}.${k}`);
+    const gaps = [
+      ...named(OWN, 'OWN'),
+      ...PEERS.flatMap((p, i) => [...named(p, `PEERS[${i}]`), ...(p?.repo ? [] : [`PEERS[${i}].repo`])]),
+    ];
+    // PEERS[].repo is not decoration: bin/mem's refusal on a peer's note names
+    // the repo to go and do it in. Missing, that message reads "Forget it from
+    // the undefined repo instead", which is worse than no message because it
+    // looks like a bug in the tool rather than a gap in the config.
+    if (gaps.length) bad(`memSpace.js is missing ${gaps.join(', ')}`);
+    else ok(`memSpace.js: owns ${OWN.collection}, reads ${PEERS.length} peer(s)`);
+
+    // Listing yourself as your own peer reads the same rows twice and, worse,
+    // makes `bin/mem forget` refuse your own notes by pointing you at your own
+    // repo -- a loop that is obvious in hindsight and baffling at the time.
+    const dupes = [OWN, ...PEERS].map((s) => s?.collection).filter(Boolean);
+    if (new Set(dupes).size !== dupes.length) bad('memSpace.js: a collection appears twice -- is this repo listed as its own peer?');
+    else ok('memSpace.js: every space is distinct');
+  }
+
+  // The write half. Every api() call that is not a GET must go to OUR
+  // collection: `mine.collectionId`, or /api/records/<id> for a record already
+  // fetched from it. A peer's id reaching a write is the whole failure.
+  const writes = [...mem.matchAll(/api\('(POST|PUT|PATCH|DELETE)',\s*`([^`]*)`/g)];
+  const strayed = writes.filter(([, , route]) =>
+    /\$\{(?!mine\.)[A-Za-z_$][\w$]*\.collectionId\}/.test(route));
+  if (strayed.length) {
+    bad(`bin/mem writes to a collection that is not its own: ${strayed.map((m) => m[2]).join(', ')}`);
+  } else ok(`bin/mem's ${writes.length} write(s) all target its own space`);
+
+  // Creating a peer's page from here would stamp THIS app as its owner
+  // (createPipelinePage takes the calling app), locking the real owner out
+  // under a sandboxed token. Setting up somebody else's memory looks like a
+  // favour and is a silent takeover.
+  const creates = [...mem.matchAll(/locate\(\s*([A-Za-z_$][\w$]*)\s*,\s*\{[^}]*create:\s*true/g)];
+  const wrong = creates.filter(([, arg]) => arg !== 'OWN');
+  if (wrong.length) bad(`bin/mem creates a space it does not own: locate(${wrong.map((m) => m[1]).join(', ')})`);
+  else ok('bin/mem only ever creates its own space');
+}
+
 // ── The session-start hook is still wired up ────────────────────────
 //
 // The same shape as everything else here: .claude/settings.json names a script
