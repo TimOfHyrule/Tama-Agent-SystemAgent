@@ -6,3 +6,8 @@ node_modules/
 # shortcut -- bin/mem finds them by name regardless, because a stale id after a
 # rename would read as "memory is empty" rather than as an error.
 .memory.json
+.contract-check.json
+
+# contractFreshness.mjs throttle. Machine-local, and only ever a throttle --
+# a missing one costs an extra check, never a missed warning.
+.contract-check.json

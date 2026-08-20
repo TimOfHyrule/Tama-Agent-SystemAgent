@@ -239,6 +239,34 @@ const bad = (m) => { console.error(`  FAIL ${m}`); failed++; };
   else ok(`hook and CLAUDE.md agree on the "${marker}" marker`);
 }
 
+// ── The staleness warning is still reachable ────────────────────────
+//
+// Same shape as the hook check above, and the same reason: delete the call and
+// every part still works perfectly. sync-contract.sh runs, --check still
+// reports, contractFreshness.mjs still exports a correct function -- and no
+// session is ever told, because nobody calls it. A tool that is fine and a
+// warning that is gone, with nothing in between to notice.
+{
+  const fresh = path.join(ROOT, 'scripts', 'contractFreshness.mjs');
+  if (!fs.existsSync(fresh)) {
+    bad('scripts/contractFreshness.mjs is missing — the stale-contract warning cannot fire');
+  } else {
+    const hook = fs.readFileSync(path.join(ROOT, 'scripts', 'sessionMemory.mjs'), 'utf8');
+    if (!/contractNote\s*\(/.test(hook)) {
+      bad('sessionMemory.mjs no longer calls contractNote() — a stale contract will never be reported');
+    } else if (!/from '\.\/contractFreshness\.mjs'/.test(hook)) {
+      bad('sessionMemory.mjs calls contractNote() but does not import it');
+    } else {
+      ok('the session-start hook still reports a stale contract');
+    }
+    // The warning has to say the thing that makes it worth reading. "Out of
+    // date" is a shrug; "your money guard is wrong" is an action.
+    const body = fs.readFileSync(fresh, 'utf8');
+    if (!/money/i.test(body)) bad('the stale-contract warning no longer says what it costs');
+    else ok('the stale-contract warning still says why it matters');
+  }
+}
+
 // ── Nothing tells the agent to print the key ────────────────────────
 //
 // The leak check below catches a key that is already in a tracked file. This

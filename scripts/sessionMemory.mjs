@@ -26,6 +26,7 @@
 // changes what is stored. A session with nothing stale says one line and gets
 // out of the way.
 import { execFileSync } from 'child_process';
+import { contractNote } from './contractFreshness.mjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -37,8 +38,15 @@ const source = process.argv[2] || 'startup';
 // still starts; it just knows it is working without memory, which is the
 // thing it must not discover silently.
 const emit = (text) => {
+  // Appended HERE rather than at the one happy-path emit at the bottom,
+  // because the contract being stale is most urgent in exactly the sessions
+  // that take an early exit: memory unavailable, no key, Tamarada down. Those
+  // sessions still call routes, and a guard reading a stale list is a guard
+  // that is wrong about money. Every exit path is one path.
+  let note = null;
+  try { note = contractNote(ROOT); } catch { /* never break the session over a warning */ }
   process.stdout.write(JSON.stringify({
-    hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: text },
+    hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: note ? `${text}\n${note}` : text },
   }));
   process.exit(0);
 };
