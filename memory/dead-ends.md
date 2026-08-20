@@ -6,6 +6,9 @@ money on the account's key.
 
 <!-- bin/memo appends below this line -->
 
+## 2026-08-20 · collection 的 field type 沒有確認過的 boolean。這個 install 現有的 18 個 collection 只用到 text / number / date / select / ref / array / file，一個 boolean 都沒有。而且 POST /api/collections/:id/schema/preview 驗不出型別——丟 type:'boolean' 進去它回 'new optional field' 當成過了，所以 preview 不能拿來確認一個型別存不存在。要 true/false 的欄位（例如 agents.memoryExists）就用 select ['yes','no']，會渲染成受限的選項，也不必賭伺服器怎麼處理不認得的型別。
+
+
 ## 2026-08-20 · 在 Claude Code 的雲端 session 裡刪不掉遠端分支。git push origin --delete 和 git push origin :branch 都回 HTTP 403（send-pack 被切斷），但一般的 push 是通的——所以那個 git proxy 允許寫入、不允許刪除 ref。GitHub MCP 也沒有 delete_branch 這個工具（有 create_branch）。本地 git branch -D 照樣可以，只會造成本地刪了遠端還在的假象。要刪遠端分支只能人去 GitHub UI 或在自己機器上做。
 
 

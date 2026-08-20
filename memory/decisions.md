@@ -5,6 +5,9 @@ reason never is.
 
 <!-- bin/memo appends below this line -->
 
+## 2026-08-20 · Agent register 放在自己的 page（Agent Register / collection agents），不是掛在 Agent memory 底下。理由是那是兩個系統：memory 是筆記，register 是「這個帳號上有哪些 agent」的名冊，混在一個 page 會讓兩者的 readiness 和權限綁在一起。Schema 照 Tama-AgentManager 的 docs/AGENT-RECORD.md，seed 照同 repo 的 agents.json。
+
+
 ## 2026-08-20 · claude/geo-seo-new-task-djxtcj 上剩下的兩個檔案作廢，不要撿回 main：docs/geo-seo-plan.md（GEO SEO 規劃）和 docs/ecpay-enquiry.md（綠界洽詢信）。Tim 2026-08-20 決定其他 agent 接手這兩件事，所以這裡的版本不是唯一來源，撿回來只會變成第二份會跟真的那份不一致。信的內容已經另外交給他了。那條分支這個環境刪不掉（見 dead-ends），要 Tim 自己刪；刪掉之後這則筆記就可以一起清掉。
 
 
