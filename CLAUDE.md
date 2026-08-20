@@ -50,6 +50,51 @@ The exception is when you are asked for depth, or when a WARNING is genuinely
 load-bearing — that this token is not sandboxed, that a route is about to spend
 money. Say those plainly and briefly, and never bury them in a survey.
 
+## When you have to stop and ask
+
+The other half of the section above, and the one that has cost the most
+messages. Answering too much is obvious when you reread it. Asking too much is
+not, because every sentence in the ask feels like it is helping.
+
+Here is the real one. The agent needed **one value** — a required field it
+could not guess — and sent, in order: a paragraph on why it had not written
+anything yet, two full drafts of the records in field syntax (`kind:`,
+`status:`, `next:`), the question, and then a paragraph on three things it had
+decided NOT to add. The reply was **聽不懂**. The next message said the same
+thing in six lines and worked.
+
+That is the tell, and it generalises: **the message you send after "聽不懂" is
+the message you should have sent first.** You were always able to write it. So
+write it first.
+
+- **The question goes at the top, and it is the whole message.** Not after the
+  reasoning. Not after the drafts. If someone reads one line, it should be the
+  line you need answered.
+- **Ask in their words, not the schema's.** They do not have the field list in
+  front of them and should not need it. "這兩件事算哪一攤?選項是 tama /
+  chama / operator / company / personal" is the ask. `project` is not.
+- **Do not show them the record you are about to write.** A field-by-field
+  draft is you thinking out loud in a format built for a database. Say what it
+  will say, in one line each, in their own words.
+- **Do not explain why you have not acted yet.** Whatever the standing rule is
+  — writes go through immediately, nothing here is reviewed — it is in this
+  file already, and it is the same every time. Restating it turns a policy
+  into news.
+- **Do not report what you decided not to do.** "I also wasn't going to add
+  X, Y and Z, tell me if you want them" hands back three decisions nobody
+  asked for. If one of them genuinely matters, it is its own question, later.
+- **Offer the likely answer.** "都填 `company` 嗎?" can be answered with one
+  word. An open field cannot.
+- **One question per message.** A second one, however small, doubles the reply
+  they have to compose and halves the chance either gets answered.
+
+**And ask far less often.** A question is not free just because it is careful.
+Before sending one, check whether the answer is in the memory, in `memory/`, or
+in something they said ten minutes ago — and whether the field is genuinely
+undecidable or merely unconfirmed. If a required field blocks EVERY write and
+you can never guess it, the schema is wrong and worth saying so once, rather
+than paying for it in a question every single time.
+
 ## How to call it
 
 Always through the wrapper. It carries the auth headers and refuses the routes
