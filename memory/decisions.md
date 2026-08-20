@@ -5,6 +5,9 @@ reason never is.
 
 <!-- bin/memo appends below this line -->
 
+## 2026-08-20 · claude/geo-seo-new-task-djxtcj 上剩下的兩個檔案作廢，不要撿回 main：docs/geo-seo-plan.md（GEO SEO 規劃）和 docs/ecpay-enquiry.md（綠界洽詢信）。Tim 2026-08-20 決定其他 agent 接手這兩件事，所以這裡的版本不是唯一來源，撿回來只會變成第二份會跟真的那份不一致。信的內容已經另外交給他了。那條分支這個環境刪不掉（見 dead-ends），要 Tim 自己刪；刪掉之後這則筆記就可以一起清掉。
+
+
 ## 2026-08-20 · 兩個 memory space 之間不需要「交接」。Tim 2026-08-20 糾正：我做了一個 for-life/ 資料夾，把該給 Life 的東西整理成檔案等人搬，理由是 bin/mem add 寫不到別人的 space。那是把讀的問題當成寫的問題在解——Life 本來就讀得到 Agent 的 memory（memSpace.js 的規則是兩邊都讀、只寫自己的）。所以想給 Life 看的東西，寫進自己的 memory 就到了。真正要搬家的（例如放錯 space 的一則 fact）是兩個指令：那邊 bin/mem add、這邊 bin/mem forget，不需要一個資料夾、一份說明和一個交接流程。
 
 
