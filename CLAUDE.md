@@ -170,7 +170,7 @@ read and edit the same thing as a table in the product. Read
 go in at all.
 
 **You read more than you write.** There is a second agent on this account —
-Tama-Life-Assisstant — with its own memory space. `bin/mem` shows both, ours
+Tama-Agent-GeneralAssisstant — with its own memory space. `bin/mem` shows both, ours
 first, and marks the other read-only. `memSpace.js` says which is which and why.
 
 Use a life note the way you would use something the human mentioned in passing:

@@ -6,7 +6,7 @@
 //
 // ── Why there are three of these ─────────────────────────────────────────
 //
-// This repo drives a Tamarada install. Tama-Life-Assisstant runs the life
+// This repo drives a Tamarada install. Tama-Agent-GeneralAssisstant runs the life
 // side, and Project-Station is Tamarada's own source. Three jobs, three repos,
 // three memories -- a session that opens to "what shall we build" should not
 // boot with the groceries, and the reverse is worse.
@@ -61,7 +61,7 @@ export const PEERS = [
     collection: 'life_memory',
     label: 'life',
     // Named so a refusal can tell you where to go instead of just saying no.
-    repo: 'Tama-Life-Assisstant',
+    repo: 'Tama-Agent-GeneralAssisstant',
   },
   {
     page: 'Platform memory',

@@ -100,7 +100,7 @@ have to remember it.
 
 ## Its other half
 
-[**Tama-Life-Assisstant**](https://github.com/TimOfHyrule/Tama-Life-Assisstant)
+[**Tama-Agent-GeneralAssisstant**](https://github.com/TimOfHyrule/Tama-Agent-GeneralAssisstant)
 is the life side of the same pair: the running of a day rather than the running
 of an install. Both read each other's memory; neither writes to the other's.
 
