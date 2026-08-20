@@ -5,6 +5,9 @@ reason never is.
 
 <!-- bin/memo appends below this line -->
 
+## 2026-08-20 · 非公司的事一律歸 Life，不管 build 側有沒有現成的地方放。Tim 2026-08-20 的裁示，推翻我當時的猶豫——我看到 life 側可能沒有對應的事項表，就建議「讀 Never Eat Alone」先留在 Professional Assistant 的 items。錯的地方是拿實作方便決定歸屬：分類照事情的性質走，容器不夠就去補容器。下次遇到同類的猶豫，直接歸 Life。
+
+
 ## 2026-08-18 · Agent tokens are preferred over the operator key for anything automated
 
 
