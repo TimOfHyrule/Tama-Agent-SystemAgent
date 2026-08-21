@@ -131,10 +131,70 @@ if (!KEY) {
   process.exit(2);
 }
 
+// `upload` exists because the only way to attach a real file is multipart, and
+// the JSON path above cannot express it. Without this, an agent that has a file
+// in hand either hand-rolls curl -- which means retyping the key, and the key is
+// the one thing that must never end up in a transcript -- or tells the human to
+// go and drag it in themselves.
+if (argv[0] === 'upload') {
+  const [, route, filePath, fieldArg] = argv;
+  if (!route || !filePath) {
+    console.error('usage: bin/tama upload <path> <file> [fieldName]');
+    process.exit(2);
+  }
+  if (!fs.existsSync(filePath)) {
+    console.error('No such file: ' + filePath);
+    process.exit(2);
+  }
+  // The server sniffs the part's content type and refuses what it does not
+  // recognise, so a typeless Blob is rejected however valid the bytes are.
+  const MIME = {
+    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    '.pdf': 'application/pdf',
+    '.txt': 'text/plain',
+    '.md': 'text/markdown',
+    '.csv': 'text/csv',
+    '.json': 'application/json',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+  };
+  const type = MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream';
+  const form = new FormData();
+  form.append(
+    fieldArg || 'file',
+    new Blob([fs.readFileSync(filePath)], { type }),
+    path.basename(filePath),
+  );
+  let up;
+  try {
+    up = await fetch(new URL(route, BASE), {
+      method: 'POST',
+      // No Content-Type here on purpose: fetch has to set it itself so the
+      // multipart boundary matches the body it just built.
+      headers: {
+        Authorization: 'Bearer ' + KEY,
+        ...(process.env.TAMARADA_API_VERSION ? { 'X-Tamarada-API': process.env.TAMARADA_API_VERSION } : {}),
+      },
+      body: form,
+    });
+  } catch (err) {
+    console.error('Could not reach Tamarada at ' + BASE + ' (' + ((err.cause && err.cause.code) || err.message) + ').');
+    process.exit(4);
+  }
+  const out = await up.text();
+  try { console.log(JSON.stringify(JSON.parse(out), null, 2)); }
+  catch { console.log(out); }
+  if (!up.ok) { console.error('HTTP ' + up.status); process.exit(1); }
+  process.exit(0);
+}
+
 const allowPaid = argv.includes('--paid');
 const [method, route, body] = argv.filter((a) => a !== '--paid');
 if (!method || !route) {
-  console.error('usage: bin/tama login [label]            print a code and wait\n       bin/tama login --start                 print a code and exit\n       bin/tama login --collect <deviceCode>  pick up the token afterwards\n       bin/tama <METHOD> <path> [json] [--paid]');
+  console.error('usage: bin/tama login [label]            print a code and wait\n       bin/tama login --start                 print a code and exit\n       bin/tama login --collect <deviceCode>  pick up the token afterwards\n       bin/tama upload <path> <file> [field]  attach a file (multipart)\n       bin/tama <METHOD> <path> [json] [--paid]');
   process.exit(2);
 }
 
