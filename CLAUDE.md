@@ -106,14 +106,21 @@ lands that nobody remembers deciding, the history cannot answer who did it.
 Every commit you make ends with, before the Co-Authored-By trailer:
 
 ```
-Agent: tama-agent
+Agent: tama-system
 ```
 
 One line, exact, lowercase. It costs nothing and it makes `git log
---grep='Agent: tama-agent'` an answer rather than a guess. The value is the
-repo you are working in, not the model you happen to be: `tama-agent`,
-`tama-life`, `project-station`. A model name would date and would answer a
-question nobody asks.
+--grep='Agent: tama-system'` an answer rather than a guess.
+
+The value is **the `id` the register gives this agent**, which is also the `id`
+in `.agent.json` and the name the manager knows it by. It used to say
+`tama-agent`, after the repository this agent used to live in, and that stopped
+being true when the repository was renamed -- so the trailer named an agent the
+register had never heard of and `git log --grep` for the real name returned
+nothing at all. Which is precisely the question both files exist to answer.
+
+The three are `tama-system`, `tama-general` and `project-station`. Not a model
+name: that would date, and it answers a question nobody asks.
 
 ## How to call it
 
