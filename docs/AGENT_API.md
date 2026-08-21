@@ -24,7 +24,7 @@ account owns.
 
 There are TWO budgets here, and only one of them is what `$` marks.
 
-**The account's Anthropic key.** 12 of 181 routes spend it. That is a bill
+**The account's Anthropic key.** 12 of 178 routes spend it. That is a bill
 to whoever owns this Tamarada install, for work Tamarada does on its own
 behalf — running a SOP step, drafting, summarising. This is the axis the
 rest of this file is about.
@@ -211,9 +211,6 @@ tokens, as above.
 - `PUT /api/pipeline-pages/:id/files/:name`
 - `GET /api/pipeline-pages/:id/files/:name/log`
 - `$` `GET /api/pipeline-pages/:id/files/:name/summary`
-- `GET /api/pipeline-pages/:id/grants`
-- `POST /api/pipeline-pages/:id/grants`
-- `DELETE /api/pipeline-pages/:id/grants/:appId`
 - `GET /api/pipeline-pages/:id/readiness`
 - `GET /api/pipeline-pages/:id/requirements`
 - `POST /api/pipeline-pages/:id/schedules/enable`

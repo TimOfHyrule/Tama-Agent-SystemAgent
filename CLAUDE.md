@@ -98,7 +98,7 @@ than paying for it in a question every single time.
 ## Sign your commits as yourself
 
 Three agents commit to this account -- this one, the life assistant, and
-whatever is working on Project-Station itself -- and all three commit under
+whatever is working on Tamarada itself -- and all three commit under
 Tim's name and email, because they authenticate as him. So when something
 lands that nobody remembers deciding, the history cannot answer who did it.
 `git log --author` returns everything.
@@ -106,14 +106,24 @@ lands that nobody remembers deciding, the history cannot answer who did it.
 Every commit you make ends with, before the Co-Authored-By trailer:
 
 ```
-Agent: tama-agent
+Agent: tama-assistant
 ```
 
 One line, exact, lowercase. It costs nothing and it makes `git log
---grep='Agent: tama-agent'` an answer rather than a guess. The value is the
-repo you are working in, not the model you happen to be: `tama-agent`,
-`tama-life`, `project-station`. A model name would date and would answer a
-question nobody asks.
+--grep='Agent: tama-assistant'` an answer rather than a guess.
+
+The value is **the `id` the register gives this agent**, which is also the `id`
+in `.agent.json` and the name the manager knows it by. It has been wrong twice.
+It said `tama-agent`, after a repository that was then renamed. It then said
+`tama-system` -- and `tama-system` has since been given to a *different* agent,
+the one that builds Tamarada itself. So a trailer left at that value would not
+merely name nobody; it would name somebody else, which is worse, because
+nothing about it looks wrong.
+
+The three are `tama-system` (builds Tamarada), `tama-assistant` (this one) and
+`general-assistant`. Not a model name: that would date, and it answers a
+question nobody asks. If you find an old commit signed `tama-agent` or
+`tama-system`, `previousIds` in the register says who that was.
 
 ## How to call it
 
