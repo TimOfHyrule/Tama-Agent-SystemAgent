@@ -98,7 +98,7 @@ than paying for it in a question every single time.
 ## Sign your commits as yourself
 
 Three agents commit to this account -- this one, the life assistant, and
-whatever is working on Project-Station itself -- and all three commit under
+whatever is working on Tamarada itself -- and all three commit under
 Tim's name and email, because they authenticate as him. So when something
 lands that nobody remembers deciding, the history cannot answer who did it.
 `git log --author` returns everything.
@@ -106,21 +106,24 @@ lands that nobody remembers deciding, the history cannot answer who did it.
 Every commit you make ends with, before the Co-Authored-By trailer:
 
 ```
-Agent: tama-system
+Agent: tama-assistant
 ```
 
 One line, exact, lowercase. It costs nothing and it makes `git log
---grep='Agent: tama-system'` an answer rather than a guess.
+--grep='Agent: tama-assistant'` an answer rather than a guess.
 
 The value is **the `id` the register gives this agent**, which is also the `id`
-in `.agent.json` and the name the manager knows it by. It used to say
-`tama-agent`, after the repository this agent used to live in, and that stopped
-being true when the repository was renamed -- so the trailer named an agent the
-register had never heard of and `git log --grep` for the real name returned
-nothing at all. Which is precisely the question both files exist to answer.
+in `.agent.json` and the name the manager knows it by. It has been wrong twice.
+It said `tama-agent`, after a repository that was then renamed. It then said
+`tama-system` -- and `tama-system` has since been given to a *different* agent,
+the one that builds Tamarada itself. So a trailer left at that value would not
+merely name nobody; it would name somebody else, which is worse, because
+nothing about it looks wrong.
 
-The three are `tama-system`, `tama-general` and `project-station`. Not a model
-name: that would date, and it answers a question nobody asks.
+The three are `tama-system` (builds Tamarada), `tama-assistant` (this one) and
+`general-assistant`. Not a model name: that would date, and it answers a
+question nobody asks. If you find an old commit signed `tama-agent` or
+`tama-system`, `previousIds` in the register says who that was.
 
 ## How to call it
 

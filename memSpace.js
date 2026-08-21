@@ -7,7 +7,7 @@
 // ── Why there are three of these ─────────────────────────────────────────
 //
 // This repo drives a Tamarada install. Tama-Agent-GeneralAssisstant runs the life
-// side, and Project-Station is Tamarada's own source. Three jobs, three repos,
+// side, and Tamarada is its own source. Three jobs, three repos,
 // three memories -- a session that opens to "what shall we build" should not
 // boot with the groceries, and the reverse is worse.
 //
@@ -28,7 +28,7 @@
 // fence rather than a wall, honestly, and a fence is still the wrong place for
 // a tenancy boundary.
 //
-// Tamarada now has page read grants (`pageGrants.js` in Project-Station). A
+// Tamarada now has page read grants (`pageGrants.js` in Tamarada). A
 // grant lets one app READ another app's page and nothing else -- there is no
 // write grant, deliberately, because two apps writing one page is a merge
 // problem nobody has an answer to yet. So with a grant in place and a
@@ -68,6 +68,6 @@ export const PEERS = [
     collection: 'platform_memory',
     label: 'platform',
     // Named so a refusal can tell you where to go instead of just saying no.
-    repo: 'Project-Station',
+    repo: 'Tamarada',
   },
 ];

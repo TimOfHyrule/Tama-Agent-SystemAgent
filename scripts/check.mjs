@@ -340,7 +340,7 @@ const note = (m) => console.log(`  note ${m}`);
 {
   const md = rd('CLAUDE.md');
   // The value is the id the register gives this agent, and it has been wrong
-  // once: the trailer said `tama-agent` after a repository that had since been
+  // twice: it said `tama-agent` after a repository that had since been
   // renamed, so it named an agent the register had never heard of and a grep
   // for the real name returned nothing. Checked against .agent.json rather
   // than against a string in here, so the two cannot drift apart again.
